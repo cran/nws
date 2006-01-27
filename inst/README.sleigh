@@ -1,0 +1,71 @@
+Sleigh for R
+------------------
+
+Sleigh is a R class, built on top of the NetWorkSpaces, that
+makes it very easy to write simple parallel programs. Sleigh has concept 
+of one master and multiple workers.  The master sends jobs to workers 
+who may or may not be on the same machine as the master.  To enable the
+master to communicate with workers, Sleigh uses SSH mechanism to run
+jobs remotely.  Therefore, before you can start Sleigh, we need to setup
+password-less ssh login.  For Windows users, where SSH is not
+available, please see below for 'Using an Alternative to SSH'.
+
+Note: This README file assumes that you have read the README file for 
+NetWorkSpaces and have set up both NetWorkSpaces server and client
+according the instructions. 
+  
+
+Setting Up a Password-less SSH Login
+===========================================
+
+To generate public and private keys, follow the steps below.
+------------------------------------------------------------ 
+ 1. ssh-keygen -t rsa 
+ 2. cd ~/.ssh (.ssh directory is located in your HOME directory) 
+ 3. cp id_rsa.pub authorized_keys This step allows password-less login
+    to local machine.  
+ 4. For all remote machines that you want password-less login, append
+   the content of  id_rsa.pub to their authorized_keys file. 
+
+
+To test the password-less login, type the following command:
+------------------------------------------------------------
+  % ssh hostname date
+
+  If everything is setup correctly, you should not be asked for password
+and the current date on remote machine will be returned. 
+  
+
+
+Using an Alternative to SSH
+==================================
+If you are running Sleigh on a platform that does not support SSH,
+Sleigh provides an alternative web launch option. 
+  
+
+To use the web launch option, follow the steps below.
+-----------------------------------------------------   	
+ 1. Start Sleigh using web launch: 		
+    > library(nws)
+    > s = sleigh(launch='web');
+
+    The Sleigh constructor does not return until it gets a signal that all
+    workers have started and are ready to accept jobs.
+ 	
+ 2. Log in to a remote machine. 	
+ 3. Start a R session. 	
+ 4. Open a web browser and point to http://server_host_name:8766,
+    where server_host_name refers to the machine that a netWorkSpaces server runs on.
+ 5. Click on the newly created Sleigh workspace, and read the value from
+    variable 'runMe'. 
+ 6. Copy the 'runMe' value to the R session.  	
+ 7. Repeat previous steps for each worker that needs to be started. 	
+ 8. Once all workers have started, delete the
+   'DeleteMeWhenAllWorkersStarted' variable from the Sleigh workspace.
+   This signals Sleigh master that the workers have started and are
+   ready to accept work.  
+  
+Now you're ready to send jobs to remote workers. 
+
+For more examples, see demo and examples/sleigh directory.
+
