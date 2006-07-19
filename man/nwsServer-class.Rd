@@ -1,14 +1,15 @@
-\name{nwsServer-class}
+\name{nwsServer}
 \docType{class}
 \alias{nwsServer-class}
+\alias{nwsServer}
 \alias{initialize,nwsServer-method}
 \title{nwsServer class}
 \description{Class representing nwsServer.}
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("nwsServer", serverHost, port)}.
 \describe{
-   \item {\bf serverHost:} server host name. Default value is local machine.
-   \item {\bf port:} server port number. Default value is 8765.
+   \item serverHost: server host name. Default value is local machine.
+   \item port: server port number. Default value is 8765.
 }
 }
 \section{Slots}{
@@ -32,10 +33,12 @@ Objects can be created by calls of the form \code{new("nwsServer", serverHost, p
 \examples{
 \dontrun{
 # example 1
+nwss = nwsServer()
+# Or,
 nwss = new("nwsServer")
 
 # example 2
-nwss = new("nwsServer", serverHost="node1", port=5555)
+nwss = nwsServer(serverHost="node1", port=5555)
 }
 }
 \keyword{classes}

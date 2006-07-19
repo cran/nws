@@ -7,7 +7,7 @@
 library(nws)
 source('matMult.R')
 
-# create a sleigh object with default options
+# change launch if you add nodeList parameter
 s = sleigh()
 
 rows = 10
@@ -25,7 +25,7 @@ for (i in 1:10) {
 
     # check the results
     D = A %*% B
-    if (all.equal(C, D)) {
+    if (isTRUE(all.equal(C, D))) {
         cat('Success\n')
     } else {
         cat('*** Failure ***\n')

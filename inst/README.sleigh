@@ -1,31 +1,55 @@
 Sleigh for R
 ------------------
 
-Sleigh is a R class, built on top of the NetWorkSpaces, that
+Sleigh is an R class, built on top of the NetWorkSpaces, that
 makes it very easy to write simple parallel programs. Sleigh has concept 
 of one master and multiple workers.  The master sends jobs to workers 
 who may or may not be on the same machine as the master.  To enable the
-master to communicate with workers, Sleigh uses SSH mechanism to run
-jobs remotely.  Therefore, before you can start Sleigh, we need to setup
-password-less ssh login.  For Windows users, where SSH is not
-available, please see below for 'Using an Alternative to SSH'.
+master to communicate with workers, Sleigh supports several 
+mechanisms to launch workers to run jobs.  
+For remote launch mechanism, make sure R is in the PATH of worker machines. 
+
+
 
 Note: This README file assumes that you have read the README file for 
 NetWorkSpaces and have set up both NetWorkSpaces server and client
-according the instructions. 
+according to the instructions. 
   
 
+Local Launch Mechanism
+=======================
+Local launch mechanism is the default option to start up workers. It starts
+three workers by default on local machine. Users may choose to change the number of
+workers by setting workerCount variable in the sleigh constructor. 
+This is useful for SMP machine, where multiple cores/processors are 
+available. Local launch is also useful in debugging parallel programs locally
+before running over a large cluster. 
+
+
+SSH Launch Mechanism
+=====================
+To start up workers on different machines, a remote login mechanism, such as
+SSH client, is needed. Remote workers also need to run SSH server in order to 
+accept requests. 
+
+For Windows users, we recommend copSSH from ITef!x,  http://www.itefix.no/phpws/.
+copSSH comes with both SSH client and server. Installation of copSSH is straight out of box. 
+After installation, remember to activate users. 
+
+Next, we need to setup password-less ssh login.  
+ 
 Setting Up a Password-less SSH Login
 ===========================================
 
 To generate public and private keys, follow the steps below.
 ------------------------------------------------------------ 
- 1. ssh-keygen -t rsa 
- 2. cd ~/.ssh (.ssh directory is located in your HOME directory) 
- 3. cp id_rsa.pub authorized_keys This step allows password-less login
-    to local machine.  
- 4. For all remote machines that you want password-less login, append
-   the content of  id_rsa.pub to their authorized_keys file. 
+ 1. Open a terminal (shell on UNIX and DOS prompt on Windows)
+ 2. ssh-keygen -t rsa  (assume ssh-keygen is in your PATH)
+ 3. cd .ssh (.ssh directory is located in your HOME directory, 
+	     /home/user on UNIX and C:\Program Files\copssh\home\user on Windows) 
+ 4. cp id_rsa.pub authorized_keys  (This step allows password-less login to local machine).
+ 5. For all remote machines that you want password-less login, append
+    the content of  id_rsa.pub to their authorized_keys file. 
 
 
 To test the password-less login, type the following command:
@@ -36,17 +60,12 @@ To test the password-less login, type the following command:
 and the current date on remote machine will be returned. 
   
 
+Web Launch Mechanism
+=====================
+Web launch mechansim allows user to start up workers on different machines 
+in an ad-hoc way, without setting up remote login mechanisms, such as SSH and RSH. 
 
-Using an Alternative to SSH
-==================================
-If you are running Sleigh on a platform that does not support SSH,
-Sleigh provides an alternative web launch option. 
-  
-
-To use the web launch option, follow the steps below.
------------------------------------------------------   	
  1. Start Sleigh using web launch: 		
-    > library(nws)
     > s = sleigh(launch='web');
 
     The Sleigh constructor does not return until it gets a signal that all
@@ -64,8 +83,18 @@ To use the web launch option, follow the steps below.
    'DeleteMeWhenAllWorkersStarted' variable from the Sleigh workspace.
    This signals Sleigh master that the workers have started and are
    ready to accept work.  
-  
-Now you're ready to send jobs to remote workers. 
+
+
+Other Launch Mechanisms
+========================
+Sleigh also supports RSH and LSF to start up remote workers. For more information
+on launch mechanisms supported by Sleigh, simply type the following in an R session 
+after NetWorkSpaces package is loaded: 
+> ?sshcmd   (information on SSH mechanism)
+> ?rshcmd   (information on RSH mechanism)
+> ?lsfcmd   (information on LSF mechanism)
+
+
+Now you're ready to send jobs to workers. 
 
 For more examples, see demo and examples/sleigh directory.
-

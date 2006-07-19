@@ -1,4 +1,4 @@
-\name{sleighPending-class}
+\name{sleighPending}
 \docType{class}
 \alias{sleighPending-class}
 \alias{sleighPending}
@@ -8,10 +8,10 @@
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("sleighPending", nws, numTasks, bn, ss)}.
 \describe{
-  \item {\bf nws:} netWorkSpace class object.
-  \item {\bf numTasks:} number of submitted tasks.
-  \item {\bf bn:} barrier names.
-  \item {\bf ss:} sleigh state.
+  \item nws: netWorkSpace class object.
+  \item numTasks: number of submitted tasks.
+  \item bn: barrier names.
+  \item ss: sleigh state.
 }
 }
 
@@ -20,8 +20,8 @@ Objects can be created by calls of the form \code{new("sleighPending", nws, numT
     \item{\code{nws}:}{Object of class \code{"netWorkSpace"} representation of the netWorkSpace class.}
     \item{\code{numTasks}:}{Object of class \code{"numeric"} representation of the number of pending tasks in sleigh.}
     \item{\code{barrierName}:}{Object of class \code{"character"} representation of the barrier name.}
-    \item{\code{sleighState}:}{Object of class \code{"environment"} representation of the sleigh state}
-    \item{\code{state}:}{Object of class \code{"environment"} representation of the sleighPending state}
+    \item{\code{sleighState}:}{Object of class \code{"environment"} representation of the sleigh state.}
+    \item{\code{state}:}{Object of class \code{"environment"} representation of the sleighPending state.}
   }
 }
 \section{Methods}{

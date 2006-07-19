@@ -1,13 +1,14 @@
 \name{lsfcmd}
 \alias{lsfcmd}
-\title{sleigh Auxiliary Function}
+\title{Sleigh Auxiliary Function}
 \description{
-This function is used to indicate LSF will be used to launch sleigh workers. 
+This function indicates that LSF will be used to launch sleigh workers. 
 }
 \seealso{\code{\link{sleigh}}}
 
 \details{
-This function is only meant to be passed into sleigh constructor.
+This function is only meant to be passed through optional argument, 'launch', 
+in the sleigh constructor.
 }
 
 \examples{

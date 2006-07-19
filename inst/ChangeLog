@@ -1,0 +1,41 @@
+nws 1.3.1
+---------
+1. Allow nwsListWss and nwsListVars to return result in data frame or string.
+2. Split sleigh.R to several files
+   - move sleighPending class to sleighPending.R
+   - move internal functions to sleigh.internal.R
+   - move workerLoop to workerLoop.R
+   - move sshcmd, rshcmd, and lsfcmd to cmdLaunchOptions.R
+3. Add launch.R which includes different ways to launch remote workers
+   - web launch
+   - cmd launch, which launches workers from worker script
+4. Add DEBUG flag to eachElem and eachWorker
+5. Add verbose mode to sleigh
+6. Allow user to specify chunkSize of each task in eachElem invocation
+7. Switched from make.socket to socketConnection to allow binary data
+to be sent to the NWS server.
+8  Changed serialization of objects from ascii to binary.
+9. Added new example programs.
+10. Add local launch mechanism, and made it the default launch method.
+11. Fixed a problem where loading a saved R workspace fails if a sleigh
+object was in the workspace.
+
+nws 1.3.2
+---------
+1. Added support for service launch mechanism.
+2. Properly quoted the commands to start the workers in addWorker function.
+3. Added logDir option to sleigh constructor.
+4. Changed the default working directory of workers to be the same as the
+master.
+5. Changed the rules for the "cmd launch functions" to return vectors rather
+than strings.
+6. Greatly improved the support for Windows in sleigh, including the
+addition of Windows services for the executing the server, babelfish,
+and sleigh workers.
+
+nws 1.3.3
+---------
+1. Added nwsServer and netWorkSpace convenience functions.
+2. Added sleighPro convenience function.
+3. Fix rshcmd function to conform to Windows rsh cmd, and 
+   add '-n' option to redirect standard input to /dev/null. 

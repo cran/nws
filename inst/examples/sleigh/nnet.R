@@ -63,6 +63,8 @@ if (parallel) {
     # parallel version using sleigh
     cat('starting parallel version\n')
     library(nws)
+
+    # change launch if you add nodeList parameter
     s <- sleigh()
     eachWorker(s, init_func, main_seed)
     results <- eachElem(s, try_networks, list(parameters[,1], parameters[,2], seeds))
