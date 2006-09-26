@@ -41,7 +41,8 @@ sleigh <- function(...) {
 setClass('sleigh',
          representation(nodeList='character', nws='netWorkSpace',
                         nwsName='character', nwss='nwsServer',
-                        options='environment', state='environment'))
+                        options='environment', state='environment'),
+         prototype(nws=NULL, nwss=NULL))
 
 setMethod('initialize', 'sleigh',
 function(.Object, ...) {

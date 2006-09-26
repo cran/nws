@@ -39,3 +39,10 @@ nws 1.3.3
 2. Added sleighPro convenience function.
 3. Fix rshcmd function to conform to Windows rsh cmd, and 
    add '-n' option to redirect standard input to /dev/null. 
+
+nws 1.3.4
+---------
+1. Modified nwsStore to support the R 2.4 version of serialize.
+2. Added prototype arguments to various setClass calls to prevent R from
+instantiating default nwsServer objects which caused warning message during
+build/installation.

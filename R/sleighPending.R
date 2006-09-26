@@ -25,7 +25,8 @@ setClass('sleighPending',
          representation(nws='netWorkSpace', numTasks='numeric',
                         numSubmitted='numeric', accumulator='function',
                         barrierName='character', sleighState='environment',
-                        state='environment'))
+                        state='environment'),
+         prototype(nws=NULL))
 setMethod('initialize', 'sleighPending',
 function(.Object, nws, numTasks, numSubmitted, accumulator, bn, ss) {
   .Object@nws = nws

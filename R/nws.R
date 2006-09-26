@@ -31,13 +31,19 @@ nwsRecvN <- function(s, n) {
 
     # we didn't get all of the data, so save the raw vector in a list
     # that we'll concatenate when we do have it all
-    r = vector('list', 100)  # preallocate 100, but it will extend as needed
+    rlen = 50
+    r = vector('list', rlen)
     i = 1
     r[i] = list(b)
 
     repeat {
       b = readBin(s, what='raw', n=n)
       i = i + 1
+      if (i > rlen) {
+        # we ran out of space in our list, so double its length
+        rlen = 2 * rlen
+        length(r) = rlen
+      }
       r[i] = list(b)
       m = length(b)
       n = n - m
@@ -258,7 +264,7 @@ netWorkSpace <- function(...) {
 }
 
 # class representing a netWorkSpace.
-setClass('netWorkSpace', representation(server='nwsServer', wsName='character'))
+setClass('netWorkSpace', representation(server='nwsServer', wsName='character'), prototype(server=NULL))
 
 setMethod('initialize', 'netWorkSpace',
           function(.Object, wsName='__default', serverHost='localhost', port=8765, useUse=FALSE, serverWrap=NULL, ...) {
@@ -479,19 +485,23 @@ nwsStoreInternal <- function(s, ws, xName, xVal) {
 
   if (!is.character(xVal) || (length(xVal) != 1)) {
     xVal = serialize(xVal, ascii=FALSE, connection=NULL)
+    # serialize returns a raw vector as of R 2.4 
+    if (is.character(xVal)) xVal = charToRaw(xVal)
   }
   else {
+    xVal = charToRaw(xVal)
     desc = desc + 1 # in other systems, we use a manifest constant and a bit or here... .
   }
   descTxt = sprintf('%020i', desc) # would prefer to use unsigned here.
 
-  sn = nchar(c(op, ws, xName, descTxt, xVal))
+  sn = nchar(c(op, ws, xName, descTxt))
+  xLen = length(xVal)
   writeBin(c(charToRaw(sprintf('0005%020d%s%020d%s%020d%s%020d%s%020d',
                              sn[1], op,
                              sn[2], ws,
                              sn[3], xName,
                              sn[4], descTxt,
-                             sn[5])), charToRaw(xVal)), s)
+                             xLen)), xVal), s)
 
   # status, barely used at the moment.
   status = as.integer(nwsRecvN(s, 4))

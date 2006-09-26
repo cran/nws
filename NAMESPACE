@@ -22,4 +22,4 @@ exportMethods(checkSleigh, waitSleigh)
 #        blendOptions, enquote, docall)
 
 export(nwsServer, netWorkSpace, close, launch, cmdLaunch, sshcmd, lsfcmd, rshcmd,
-       envcmd, scriptcmd, sleigh, workerLoop, initialize)
+       ccscmd, envcmd, scriptcmd, sleigh, workerLoop, initialize)

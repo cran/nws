@@ -19,7 +19,13 @@
 
 library(nws)
 
-bws = new('netWorkSpace', 'R babelfish')
-while (1) {
-  nwsStore(bws, 'doof', paste(capture.output(nwsFetch(bws, 'food')), collapse = '\n'))
+maxlen = 10000
+
+bws = netWorkSpace('R babelfish')
+repeat {
+  s = paste(capture.output(nwsFetch(bws, 'food')), collapse = '\n')
+  if (nchar(s) > maxlen) {
+    s = paste(substr(s, 1, maxlen), '[WARNING: output truncated]')
+  }
+  nwsStore(bws, 'doof', s)
 }

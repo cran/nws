@@ -51,6 +51,10 @@ lsfcmd <- function(host, options) {
   'bsub'
 }
 
+ccscmd <- function(host, options) {
+  c("job", "submit", "/exclusive:false")
+}
+
 envcmd <- function(host, envVars, options) {
   c('env', envVars, file.path(options$scriptDir, options$scriptName))
 }
