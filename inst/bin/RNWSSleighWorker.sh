@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (c) 2005-2006, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -23,47 +23,79 @@ cd ${RSleighWorkingDir:-'/tmp'}
 LogDir=${RSleighLogDir:-'/tmp'}
 if [ -n "${RSleighWorkerOut}" ]; then
     RSleighVerbose='TRUE'
-    WorkerOut="${LogDir}/`basename ${RSleighWorkerOut}`"
+    RSleighLogFile="${LogDir}/`basename ${RSleighWorkerOut}`"
 else
     RSleighVerbose='FALSE'
-    WorkerOut='/dev/null'
+    RSleighLogFile='/dev/null'
 fi
-export RSleighVerbose
+export RSleighVerbose RSleighLogFile
 
 # compute engine
-$RProg --vanilla --slave <<'EOF' > ${WorkerOut} 2>&1 &
+$RProg --vanilla --slave <<'EOF' > ${RSleighLogFile} 2>&1 &
 
-scriptDir = Sys.getenv('RSleighScriptDir')
+# use RSleighScriptDir to add the directory that contains
+# the nws package to the library path if possible
+# (and without modifying the worker's global environment)
+local({
+    scriptDir <- Sys.getenv('RSleighScriptDir')
+    if (basename(scriptDir) == 'bin') {
+        nwsDir <- dirname(scriptDir)
+        if (basename(nwsDir) == 'nws') {
+            libDir <- dirname(nwsDir)
+            oldPaths <- .libPaths()
+            newPaths <- c(libDir, oldPaths)
+            cat("setting library paths to", newPaths, "\n")
+            .libPaths(newPaths)
+        }
+    }
+})
+
 library(nws)
 cmdLaunch(as.logical(Sys.getenv('RSleighVerbose')))
 EOF
 
-export RCEPid=$!
-export RCEHost=`hostname`
+RCEPid=$!
+RCEHost=`hostname`
+export RCEPid RCEHost
 
 # sentinel
 $RProg --vanilla --slave <<'EOF' > ${LogDir}/RSleighSentinelLog_${UID}_${RSleighID} 2>&1
 
-scriptDir = Sys.getenv('RSleighScriptDir')
+local({
+    scriptDir <- Sys.getenv('RSleighScriptDir')
+    if (basename(scriptDir) == 'bin') {
+        nwsDir <- dirname(scriptDir)
+        if (basename(nwsDir) == 'nws') {
+            libDir <- dirname(nwsDir)
+            oldPaths <- .libPaths()
+            newPaths <- c(libDir, oldPaths)
+            cat("setting library paths to", newPaths, "\n")
+            .libPaths(newPaths)
+        }
+    }
+})
+
 library(nws)
 
-cePid = Sys.getenv('RCEPid');
-ceHost = Sys.getenv('RCEHost');
-
-
-nws = new('netWorkSpace', wsName=Sys.getenv('RSleighNwsName'), serverHost=Sys.getenv('RSleighNwsHost'), port=as.integer(Sys.getenv('RSleighNwsPort')), useUse=TRUE);
+cePid <- Sys.getenv('RCEPid')
+ceHost <- Sys.getenv('RCEHost')
+nws <- netWorkSpace(wsName=Sys.getenv('RSleighNwsName'),
+    serverHost=Sys.getenv('RSleighNwsHost'),
+    port=as.integer(Sys.getenv('RSleighNwsPort')),
+    useUse=TRUE, create=FALSE)
 
 waitForEnd <- function(nws) {
- nwsFind(nws, 'Sleigh ride over')
- system(sprintf('kill %s', cePid))
- nwsStore(nws, 'bye', 1)
- quit(save='no')
+    nwsFind(nws, 'Sleigh ride over')
+    system(sprintf('kill %s', cePid))
+    nwsStore(nws, 'bye', 1)
+    quit(save='no')
 }
 
 try(waitForEnd(nws))
 
 Sys.sleep(3)
-# still here (see trap in sh script --- but that's probably not working)?, kill the subjob (still a possible race here...)
+# still here (see trap in sh script --- but that's probably not working)?
+# kill the subjob (still a possible race here...)
 system(sprintf('kill %s', cePid))
 nwsStore(nws, 'bye', 101)
 

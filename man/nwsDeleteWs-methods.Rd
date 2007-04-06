@@ -20,15 +20,15 @@ Delete a shared netWorkSpace from the netWorkSpaces server.
 \examples{
 \dontrun{
 # example 1
-nwss = new("nwsServer")
-ws = nwsOpenWs(nwss, "nws example")
+nwss <- nwsServer()
+ws <- nwsOpenWs(nwss, "nws example")
 # do some works
 # ...
 nwsDeleteWs(nwss, "nws example")
 
 # example 2 illustrates accessing a server object 
 # from the netWorkSpace class object
-ws = new("netWorkSpace", "nws example 2")
+ws <- netWorkSpace("nws example 2")
 # do some works 
 # ...
 nwsDeleteWs(ws@server, "nws example 2")

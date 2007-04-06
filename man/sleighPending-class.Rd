@@ -3,7 +3,7 @@
 \alias{sleighPending-class}
 \alias{sleighPending}
 \alias{initialize,sleighPending-method}
-\title{Class "sleighPending"}
+\title{Class ``sleighPending"}
 \description{Class representing sleighPending.}
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("sleighPending", nws, numTasks, bn, ss)}.

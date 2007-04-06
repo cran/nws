@@ -1,16 +1,15 @@
-# print n number of hello world from workers
+# This simple R sleigh example executes 10 tasks on the sleigh
+# that return a friendly greeting
 
-library(nws)
+# initialize
+library(nws); s = sleigh()
+ntasks = 10
 
-# change launch if you add nodeList parameter
-s = sleigh()
+# define the worker function
+worker = function(x) {
+  Sys.sleep(1)
+  paste("hello", x, "from worker", SleighRank)
+}
 
-cat('Type a positive number:\n')
-n = scan("", n=1, quiet=TRUE)
-
-fun = function(x) paste("hello world", x, "from worker", SleighRank)
-greetings = eachElem(s, fun, 1:n)
-
-print(greetings)
-
-stopSleigh(s)
+# execute the tasks and print the result list
+print(eachElem(s, worker, 1:ntasks))

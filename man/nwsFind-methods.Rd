@@ -28,12 +28,11 @@ particular value returned depends on xName's behavior. See
 
 \seealso{ \code{\link{nwsDeclare}}, \code{\link{nwsFetch}}}
 
-
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws <- netWorkSpace('nws example')
 nwsStore(ws, 'x', 1)
-x = nwsFind(ws, 'x')
+x <- nwsFind(ws, 'x')
 }
 }
 

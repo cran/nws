@@ -1,6 +1,5 @@
 #
-#
-# Copyright (c) 2005-2006, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -136,8 +135,7 @@ function(.Object, ...) {
     stop('unknown launch protocol.')
   }
 
-
-   # set up the sleigh's netWorkSpace.
+  # set up the sleigh's netWorkSpace.
   .Object@nwss = new('nwsServer', serverHost=opts$nwsHost, port=opts$nwsPort)
   .Object@nwsName = nwsMktempWs(.Object@nwss, opts$wsNameTemplate)
   # NEED TO ADD ERROR HANDLING CODE HERE
@@ -154,8 +152,14 @@ function(.Object, ...) {
   nwsDeclare(.Object@nws, 'workerCount', 'single')
 
   if (is.function(opts$launch)) {
+    if (length(opts$nodeList) < 1) {
+      close(.Object@nwss)
+      stop('must have at least one worker in a sleigh')
+    }
+
     .Object@nodeList = opts$nodeList
     .Object@state$workerCount = length(opts$nodeList)
+
     for (i in 1:.Object@state$workerCount) {
       if (opts$verbose)
         opts$outfile = sprintf('%s_%04d.txt', .Object@nwsName, i)
@@ -167,6 +171,11 @@ function(.Object, ...) {
   }
   else if (opts$launch == 'service') {
     # remote launch using the "R Sleigh Service"
+    if (length(opts$nodeList) < 1) {
+      close(.Object@nwss)
+      stop('must have at least one worker in a sleigh')
+    }
+
     .Object@nodeList = opts$nodeList
     .Object@state$workerCount = length(opts$nodeList)
     service = nwsUseWs(.Object@nwss, 'RSleighService', create=FALSE)
@@ -193,6 +202,11 @@ function(.Object, ...) {
     }
   }
   else if (opts$launch == 'local') {
+    if (opts$workerCount < 1) {
+      close(.Object@nwss)
+      stop('must have at least one worker in a sleigh')
+    }
+
     .Object@state$workerCount = opts$workerCount
     .Object@nodeList = rep('localhost', opts$workerCount)
     for (i in 1:.Object@state$workerCount) {
@@ -311,7 +325,7 @@ function(.Object, fun, ..., eo=NULL, DEBUG=FALSE) {
   nwsStore(.Object@nws, 'totalTasks', as.character(.Object@state$totalTasks))
 
   # submit the tasks
-  lapply(1:wc, storeTask, nws=nws, fun=fun, args=list(list(...)), barrier=TRUE)
+  lapply(1:wc, storeTask, nws=nws, fun=fun, args=list(list(...)), barrier=TRUE, job=-1)
 
   if (!blocking) {
     .Object@state$occupied = TRUE
@@ -323,7 +337,11 @@ function(.Object, fun, ..., eo=NULL, DEBUG=FALSE) {
   accumargs = try(length(formals(accumulator)))
 
   for (i in 1:wc) {
-    r = nwsFetch(nws, 'result')
+    repeat {
+      r = nwsFetch(nws, 'result')
+      # ignore everything but 'VALUE' messages
+      if (is.list(r) && r$type == 'VALUE') break
+    }
     if (is.null(accumulator)) {
       val[r$tag] = r$value
     }
@@ -517,7 +535,7 @@ function(.Object, fun, elementArgs=list(), fixedArgs=list(), eo=NULL, DEBUG=FALS
 
         if (length(argchunk) > 0) {
           numSubmitted = numSubmitted + 1
-          storeTask(nws, fun, argchunk, tag=tag, barrier=FALSE)
+          storeTask(nws, fun, argchunk, tag=tag, barrier=FALSE, job=-1)
           tag = tag + length(argchunk)
         }
       }
@@ -537,7 +555,11 @@ function(.Object, fun, elementArgs=list(), fixedArgs=list(), eo=NULL, DEBUG=FALS
     }
 
     if (numReturned < numSubmitted) {
-      r = nwsFetch(nws, 'result')
+      repeat {
+        r = nwsFetch(nws, 'result')
+        # ignore everything but 'VALUE' messages
+        if (is.list(r) && r$type == 'VALUE') break
+      }
       if (is.null(accumulator)) {
         val[r$tag:(r$tag + length(r$value) - 1)] = r$value
       }
@@ -564,3 +586,6 @@ setMethod('rankCount', 'sleigh', function(.Object) .Object@state$rankCount)
 
 setGeneric('workerCount', function(.Object) standardGeneric('workerCount'))
 setMethod('workerCount', 'sleigh', function(.Object) .Object@state$workerCount)
+
+setGeneric('netWorkSpaceObject', function(.Object) standardGeneric('netWorkSpaceObject'))
+setMethod('netWorkSpaceObject', 'sleigh', function(.Object) .Object@nws)

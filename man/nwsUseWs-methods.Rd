@@ -24,8 +24,8 @@ but no ownership will be claimed.
 
 \examples{
 \dontrun{
-nwss = new("nwsServer")
-ws = nwsUseWs(nwss, "nws example")
+nwss <- nwsServer()
+ws <- nwsUseWs(nwss, "nws example")
 }
 }
 

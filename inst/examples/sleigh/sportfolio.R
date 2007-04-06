@@ -32,7 +32,7 @@ fun <- function(numSamples, numStocks) {
 # create the plot window
 dev.set(2)
 plot.new()
-plot.window(xlim=c(0.0, 2.5), ylim=c(8.5, 11.5))
+plot.window(xlim=c(0.3, 1.3), ylim=c(9.0, 10.6))
 axis(1); axis(2); box()
 title(xlab='Risk', ylab='Reward', main='Sequential Efficient Frontier')
 colors <- rainbow(3)

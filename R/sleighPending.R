@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2006, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -84,7 +84,11 @@ setMethod('waitSleigh', 'sleighPending', function(.Object) {
 
   if (.Object@numSubmitted > 0) {
     for (i in 1:.Object@numSubmitted) {
-      r = nwsFetch(.Object@nws, 'result')
+      repeat {
+        r = nwsFetch(.Object@nws, 'result')
+        # ignore everything but 'VALUE' messages
+        if (is.list(r) && r$type == 'VALUE') break
+      }
       if (is.null(accum)) {
         val[r$tag:(r$tag + length(r$value) - 1)] = r$value
       }

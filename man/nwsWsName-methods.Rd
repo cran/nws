@@ -18,7 +18,7 @@ Return name of a netWorkSpace.
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws = netWorkSpace('nws example')
 nwsWsName(ws)
 }
 }

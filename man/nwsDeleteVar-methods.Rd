@@ -19,7 +19,7 @@ Delete a variable from the shared netWorkSpace.
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws <- netWorkSpace('nws example')
 nwsStore(ws, 'x', 10)
 nwsDeleteVar(ws, 'x')
 }

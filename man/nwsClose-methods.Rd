@@ -18,7 +18,7 @@ Close connection of a shared netWorkSpace to the netWorkSpace server.
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws <- netWorkSpace('nws example')
 # do some works
 # ...
 nwsClose(ws)

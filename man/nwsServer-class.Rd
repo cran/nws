@@ -3,7 +3,7 @@
 \alias{nwsServer-class}
 \alias{nwsServer}
 \alias{initialize,nwsServer-method}
-\title{nwsServer class}
+\title{Class ``nwsServer"}
 \description{Class representing nwsServer.}
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("nwsServer", serverHost, port)}.

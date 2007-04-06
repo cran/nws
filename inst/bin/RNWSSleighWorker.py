@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2005-2006, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -41,6 +41,7 @@ def main():
     outfile = Env.get('RSleighWorkerOut')
     if outfile:
         outfile = os.path.join(logDir, os.path.split(outfile)[1])
+    Env['RSleighLogFile'] = outfile
     verbose = Env.has_key('RSleighWorkerOut') and 'TRUE' or 'FALSE'
     nwsName = Env['RSleighNwsName']
     nwsHost = Env.get('RSleighNwsHost', 'localhost')
@@ -49,6 +50,23 @@ def main():
 
     # create the script file for the worker to execute
     script = '''\
+# use RSleighScriptDir to add the directory that contains
+# the nws package to the library path if possible
+# (and without modifying the worker's global environment)
+local({
+    scriptDir <- Sys.getenv('RSleighScriptDir')
+    if (basename(scriptDir) == 'bin') {
+        nwsDir <- dirname(scriptDir)
+        if (basename(nwsDir) == 'nws') {
+            libDir <- dirname(nwsDir)
+            oldPaths <- .libPaths()
+            newPaths <- c(libDir, oldPaths)
+            cat("setting library paths to", newPaths, "\n")
+            .libPaths(newPaths)
+        }
+    }
+})
+
 library(nws)
 cmdLaunch(%s)
 ''' % verbose
@@ -83,7 +101,7 @@ cmdLaunch(%s)
             from nws.client import NetWorkSpace
         except ImportError:
             from nwsclient import NetWorkSpace
-        nws = NetWorkSpace(nwsName, nwsHost, nwsPort, useUse=True)
+        nws = NetWorkSpace(nwsName, nwsHost, nwsPort, useUse=True, create=False)
         sentinel(nws)
 
         print "killing R worker"

@@ -36,7 +36,7 @@ below for details.
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws <- netWorkSpace('nws example')
 
 # To store value 5 bound to variable 'x' on the netWorkSpace 'ws'
 # (If 'x' was declared, then its mode is inherited, 
@@ -45,11 +45,11 @@ nwsStore(ws, 'x', 5)
 
 # store 10 values associate with variable y to the netWorkSpace
 for (i in 1:10)
-nwsStore(ws, 'y', i)
+  nwsStore(ws, 'y', i)
 
 # retrieve 10 values associate with variable y from the netWorkSpace
 for (i in 1:10)
-print(nwsFetch(ws, 'y'))
+  print(nwsFetch(ws, 'y'))
 }
 }
 

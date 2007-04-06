@@ -4,8 +4,7 @@
 \alias{sleigh}
 \alias{initialize,sleigh-method}
 \alias{initialize}
-
-\title{Class "sleigh"}
+\title{Class ``sleigh"}
 \description{Class representing sleigh.}
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("sleigh", ...)}, where `...' can
@@ -59,21 +58,21 @@ launch variable to a function (sshcmd, rshcmd, or lsfcmd) or a string
 \examples{
 \dontrun{
 # Default option: create three sleigh workers on local host
-s = sleigh()
+s <- sleigh()
 # Or, 
-s = new('sleigh')
+s <- new('sleigh')
 # Or,
-s = sleigh(launch='local')
+s <- sleigh(launch='local')
 
 
 # Create sleigh workers on multiple machines using SSH
-s = sleigh(c('n1', 'n2', 'n3'), launch=sshcmd)
+s <- sleigh(c('n1', 'n2', 'n3'), launch=sshcmd)
 
 # Use LSF to remote login to remote machines. 
-s = sleigh(launch=lsfcmd)
+s <- sleigh(launch=lsfcmd)
 
 # Use web launch
-s = sleigh(launch='web')
+s <- sleigh(launch='web')
 
 }
 }

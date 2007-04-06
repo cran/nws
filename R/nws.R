@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2006, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -66,7 +66,8 @@ nwsServer <- function(...) {
 }
 
 # class respresenting connection to a netWorkSpace server.
-setClass('nwsServer', representation(nwsSocket='ANY', port='numeric', serverHost='character'))
+setClass('nwsServer', representation(nwsSocket='ANY', port='numeric',
+         serverHost='character', cookieProtocol='logical'))
 
 setMethod('initialize', 'nwsServer',
           function(.Object, serverHost='localhost', port=8765) {
@@ -88,9 +89,10 @@ setMethod('initialize', 'nwsServer',
             .Object@nwsSocket = tryCatch(socketConnection(serverHost, port=port, open='a+b', blocking=TRUE),
                                          finally=options(timeout=old.timeout))
 
-            # handshaking that does nothing at the moment.
-            writeBin(charToRaw('0000'), .Object@nwsSocket)
-            nwsRecvN(.Object@nwsSocket, 4)
+            # tell the server that we're a new client
+            writeBin(charToRaw('1112'), .Object@nwsSocket)
+            handshake <- nwsRecvN(.Object@nwsSocket, 4)
+            .Object@cookieProtocol <- handshake != '2222'
             .Object
           })
 
@@ -117,8 +119,10 @@ setMethod('nwsListWss', 'nwsServer',
             s = .Object@nwsSocket
             writeBin(charToRaw(sprintf('0001%020d%s', nchar(op), op)), s)
 
-            status = nwsRecvN(s, 4)
+            status = as.integer(nwsRecvN(s, 4))
             desc = nwsRecvN(s, 20)
+            if (.Object@cookieProtocol)
+              cookie <- nwsRecvN(s, 40)
 
             ret <- nwsRecvN(s, as.integer(nwsRecvN(s, 20)))
             if (showDataFrame==FALSE)
@@ -163,15 +167,21 @@ setMethod('nwsListWss', 'nwsServer',
 
 setMethod('nwsMktempWs', 'nwsServer',
           function(.Object, wsNameTemplate) {
+            if (!is.character(wsNameTemplate))
+              stop('workspace name must be a string')
+
             op = 'mktemp ws'
             s = .Object@nwsSocket
-            writeBin(charToRaw(sprintf('0002%020d%s%020d%s', nchar(op), op, nchar(wsNameTemplate), wsNameTemplate)), s)
-
-            # status, unused at the moment
-            status = nwsRecvN(s, 4)
-            desc = nwsRecvN(s, 20)
-
-            nwsRecvN(s, as.integer(nwsRecvN(s, 20)))
+            writeBin(charToRaw(sprintf('0002%020d%s%020d%s',
+                nchar(op), op, nchar(wsNameTemplate), wsNameTemplate)), s)
+            status = as.integer(nwsRecvN(s, 4))
+            desc = nwsRecvN(s, 20) # unused at the moment.
+            if (.Object@cookieProtocol)
+              cookie <- nwsRecvN(s, 40) # unused at the moment.
+            n <- as.integer(nwsRecvN(s, 20))
+            name <- nwsRecvN(s, n)
+            if (status != 0) stop('mktempWs failed')
+            name
           })
 
 setMethod('nwsOpenWs', 'nwsServer',
@@ -264,10 +274,13 @@ netWorkSpace <- function(...) {
 }
 
 # class representing a netWorkSpace.
-setClass('netWorkSpace', representation(server='nwsServer', wsName='character'), prototype(server=NULL))
+setClass('netWorkSpace', representation(server='nwsServer',
+         wsName='character', cookieProtocol='logical'),
+         prototype(server=NULL))
 
 setMethod('initialize', 'netWorkSpace',
-          function(.Object, wsName='__default', serverHost='localhost', port=8765, useUse=FALSE, serverWrap=NULL, ...) {
+          function(.Object, wsName='__default', serverHost='localhost',
+                   port=8765, useUse=FALSE, serverWrap=NULL, ...) {
             # ask gw what is the right way to overload init/constructor func. and call by ref too.
             # ... because there may be option args related to persistence.
             .Object@wsName = wsName
@@ -295,6 +308,7 @@ setMethod('initialize', 'netWorkSpace',
                 tryCatch(nwsOpenWs(.Object@server, wsName, spaceWrap, ...), error=handler)
               }
             }
+            .Object@cookieProtocol <- .Object@server@cookieProtocol
 
             .Object
           })
@@ -318,11 +332,16 @@ setGeneric('nwsFetch', function(.Object, xName) standardGeneric('nwsFetch'))
 setGeneric('nwsFetchTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsFetchTry'))
 setGeneric('nwsFind', function(.Object, xName) standardGeneric('nwsFind'))
 setGeneric('nwsFindTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsFindTry'))
+setGeneric('nwsIFetch', function(.Object, xName) standardGeneric('nwsIFetch'))
+setGeneric('nwsIFetchTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsIFetchTry'))
+setGeneric('nwsIFind', function(.Object, xName) standardGeneric('nwsIFind'))
+setGeneric('nwsIFindTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsIFindTry'))
 setGeneric('nwsListVars', function(.Object, wsName='', showDataFrame=FALSE) standardGeneric('nwsListVars'))
 setGeneric('nwsStore', function(.Object, xName, xVal) standardGeneric('nwsStore'))
 setGeneric('nwsWsName', function(.Object) standardGeneric('nwsWsName'))
 setGeneric('nwsVariable', function(.Object, xName, mode=c('fifo','lifo','multi','single'),
            env=parent.frame(), force=FALSE, quietly=FALSE) standardGeneric('nwsVariable'))
+setGeneric('nwsServerObject', function(.Object) standardGeneric('nwsServerObject'))
 
 setMethod('nwsClose', 'netWorkSpace',
           function(.Object) {
@@ -370,7 +389,7 @@ setMethod('nwsDeleteVar', 'netWorkSpace',
           })
 
 # helper function for fetch/find methods.
-nwsRetrieve <- function(s, ws, xName, op, defaultVal=NULL) {
+nwsRetrieve <- function(cprot, s, ws, xName, op, defaultVal=NULL) {
   sn = nchar(c(op, ws, xName))
   writeBin(charToRaw(sprintf('0003%020d%s%020d%s%020d%s',
                           sn[1], op,
@@ -383,11 +402,12 @@ nwsRetrieve <- function(s, ws, xName, op, defaultVal=NULL) {
   envId = desc %/% 16777216 #(2^24)
   isString = desc %% 2
 
-  sVal = nwsRecvN(s, as.integer(nwsRecvN(s, 20)))
+  if (cprot) cookie <- nwsRecvN(s, 40)
 
-  if (status != 0) {
-    stop('retrieval failed')
-  }
+  n = as.integer(nwsRecvN(s, 20))
+  sVal = nwsRecvN(s, n)
+
+  if (status != 0) stop('retrieval failed')
 
   if (isString) {
     sVal
@@ -402,24 +422,50 @@ nwsRetrieve <- function(s, ws, xName, op, defaultVal=NULL) {
 
 setMethod('nwsFetch', 'netWorkSpace',
           function(.Object, xName) {
-            nwsRetrieve(.Object@server@nwsSocket, .Object@wsName, xName, 'fetch')
+            nwsRetrieve(.Object@cookieProtocol, .Object@server@nwsSocket,
+                        .Object@wsName, xName, 'fetch')
           })
 
 setMethod('nwsFetchTry', 'netWorkSpace',
           function(.Object, xName, defaultVal=NULL) {
-            tryCatch(nwsRetrieve(.Object@server@nwsSocket, .Object@wsName, xName, 'fetchTry', defaultVal),
+            tryCatch(nwsRetrieve(.Object@cookieProtocol,
+                                 .Object@server@nwsSocket, .Object@wsName,
+                                 xName, 'fetchTry', defaultVal),
                     error=function(e) defaultVal)
           })
 
 setMethod('nwsFind', 'netWorkSpace',
           function(.Object, xName) {
-            nwsRetrieve(.Object@server@nwsSocket, .Object@wsName, xName, 'find')
+            nwsRetrieve(.Object@cookieProtocol, .Object@server@nwsSocket,
+                        .Object@wsName, xName, 'find')
           })
 
 setMethod('nwsFindTry', 'netWorkSpace',
           function(.Object, xName, defaultVal=NULL) {
-            tryCatch(nwsRetrieve(.Object@server@nwsSocket, .Object@wsName, xName, 'findTry', defaultVal),
+            tryCatch(nwsRetrieve(.Object@cookieProtocol,
+                                 .Object@server@nwsSocket, .Object@wsName,
+                                 xName, 'findTry', defaultVal),
                     error=function(e) defaultVal)
+          })
+
+setMethod('nwsIFetch', 'netWorkSpace',
+          function(.Object, xName) {
+            nwsValueIterator(.Object, xName, 'ifetch', NULL)
+          })
+
+setMethod('nwsIFetchTry', 'netWorkSpace',
+          function(.Object, xName, defaultVal=NULL) {
+            nwsValueIterator(.Object, xName, 'ifetchTry', defaultVal)
+          })
+
+setMethod('nwsIFind', 'netWorkSpace',
+          function(.Object, xName) {
+            nwsValueIterator(.Object, xName, 'ifind', NULL)
+          })
+
+setMethod('nwsIFindTry', 'netWorkSpace',
+          function(.Object, xName, defaultVal=NULL) {
+            nwsValueIterator(.Object, xName, 'ifindTry', defaultVal)
           })
 
 # to see list output clearly use: write(nwsList...(), stdout())
@@ -434,8 +480,10 @@ setMethod('nwsListVars', 'netWorkSpace',
                                     nchar(wsName), wsName)), s)
 
             # status, unused at the moment
-            status = nwsRecvN(s, 4)
+            status = as.integer(nwsRecvN(s, 4))
             desc = nwsRecvN(s, 20)
+            if (.Object@cookieProtocol)
+              cookie <- nwsRecvN(s, 40)
 
             ret <- nwsRecvN(s, as.integer(nwsRecvN(s, 20)))
             if (showDataFrame==FALSE)
@@ -550,13 +598,13 @@ setMethod('nwsVariable', 'netWorkSpace',
               if (identical(mode, 'single')) {
                 mf <- function(val)
                   if (missing(val))
-                    nwsRetrieve(s, ws, xName, 'find')
+                    nwsRetrieve(.Object@cookieProtocol, s, ws, xName, 'find')
                   else
                     nwsStoreInternal(s, ws, xName, val)
               } else {
                 mf <- function(val)
                   if (missing(val))
-                    nwsRetrieve(s, ws, xName, 'fetch')
+                    nwsRetrieve(.Object@cookieProtocol, s, ws, xName, 'fetch')
                   else
                     nwsStoreInternal(s, ws, xName, val)
               }
@@ -567,3 +615,66 @@ setMethod('nwsVariable', 'netWorkSpace',
                 warning('not overwriting previous binding for ', xName)
             }
           })
+
+setMethod('nwsServerObject', 'netWorkSpace', function(.Object) .Object@server)
+
+# helper function for ifetch/ifind methods.
+nwsIRetrieve <- function(s, ws, xName, op, varId, valIndex) {
+  sn = nchar(c(op, ws, xName))
+  writeBin(charToRaw(sprintf('0005%020d%s%020d%s%020d%s%020d%-20.20s%020d%020d',
+                          sn[1], op,
+                          sn[2], ws,
+                          sn[3], xName,
+                          20, varId,
+                          20, valIndex)), s)
+
+  status = as.integer(nwsRecvN(s, 4))
+
+  desc = as.integer(nwsRecvN(s, 20))
+  envId = desc %/% 16777216 #(2^24)
+  isString = desc %% 2
+
+  # cookie protocol is assumed at this point
+  varId = nwsRecvN(s, 20)
+  valIndex = as.integer(nwsRecvN(s, 20))
+
+  n = as.integer(nwsRecvN(s, 20))
+  sVal = nwsRecvN(s, n)
+
+  if (isString) {
+    list(status=status, sVal=sVal, varId=varId, valIndex=valIndex)
+  }
+  else if (nchar(sVal) > 0) {
+    list(status=status, sVal=unserialize(sVal), varId=varId, valIndex=valIndex)
+  }
+  else {
+    stop('StopIteration')
+  }
+}
+
+# helper function to return a closure that acts as an iterator
+nwsValueIterator <- function(.Object, xName, op, defaultVal) {
+  if (!.Object@cookieProtocol)
+    stop('NWS server does not support iterated operations')
+  if (!is.character(xName))
+    stop('variable name must be a string')
+
+  # initial state of the closure
+  varId <- ''
+  valIndex <- 0
+
+  function() {
+    defval <- list(status=0, varId=varId, valIndex=valIndex, sVal=defaultVal)
+
+    r <- tryCatch({
+          nwsIRetrieve(.Object@server@nwsSocket, .Object@wsName,
+                       xName, op, varId, valIndex)
+        }, error=function(e) defval)
+
+    varId <<- r$varId
+    valIndex <<- r$valIndex
+
+    if (r$status != 0) stop('retrieval failed')
+    r$sVal
+  }
+}

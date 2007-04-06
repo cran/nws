@@ -34,7 +34,7 @@ defaultVal is returned. By default, defaultVal is NULL.
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws <- netWorkSpace('nws example')
 # If variable 'x' is not found in the shared netWorkSpace,
 # return default value, NULL.
 nwsFetchTry(ws, 'x')

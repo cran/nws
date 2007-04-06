@@ -4,7 +4,7 @@
 \alias{netWorkSpace}
 \alias{initialize,netWorkSpace-method}
 
-\title{Class "netWorkSpace"}
+\title{Class ``netWorkSpace"}
 \description{Class representing netWorkSpace.}
 \section{Objects from the Class}{
 Objects can be created by calls of the form \cr \code{new("netWorkSpace", wsName, serverHost, port, useUse, serverWrap, ...)}.

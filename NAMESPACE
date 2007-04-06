@@ -4,6 +4,7 @@ exportClasses(nwsServer, netWorkSpace, sleigh, sleighPending)
 # netWorkSpace class
 exportMethods(nwsClose, nwsDeclare, nwsDeleteVar, 
               nwsFetch, nwsFetchTry, nwsFind, nwsFindTry, 
+              nwsIFetch, nwsIFetchTry, nwsIFind, nwsIFindTry, 
               nwsListVars, nwsStore, nwsWsName, nwsVariable)
 
 # nwsServer class

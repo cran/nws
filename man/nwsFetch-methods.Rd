@@ -31,7 +31,7 @@ value removed depends on xName's behavior. See \code{\link{nwsDeclare}} for deta
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws <- netWorkSpace('nws example')
 nwsStore(ws, 'x', 10)
 nwsFetch(ws, 'x')
 nwsFetch(ws, 'x') # no value for x; therefore block on fetch

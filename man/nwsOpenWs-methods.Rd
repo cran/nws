@@ -39,14 +39,14 @@ the netWorkSpace will be purged.
 \examples{
 \dontrun{
 # example 1
-nwss = new("nwsServer")
-ws = nwsOpenWs(nwss, "nws example")
+nwss <- nwsServer()
+ws <- nwsOpenWs(nwss, "nws example")
 
 # example 2
-xs = nwsOpenWs(nwss, wsName='nws example', space=ws)
+xs <- nwsOpenWs(nwss, wsName='nws example', space=ws)
 
 # example 3
-ys = nwsOpenWs(nwss, "persistent space", persistent=TRUE)
+ys <- nwsOpenWs(nwss, "persistent space", persistent=TRUE)
 }
 }
 

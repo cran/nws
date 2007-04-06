@@ -1,4 +1,4 @@
-ws = new('netWorkSpace', 'r place')
+ws = netWorkSpace('r place')
 cat('connected, listing contents of netWorkSpace (should be nothing there).\n', nwsListVars(ws), '\n')
 
 nwsStore(ws, 'x', 1)

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2006, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -93,12 +93,13 @@ addWorker <- function(machine, wsName, id, workerCount, options) {
 }
 
 storeTask <- function(nws, fun, args,
-                      tag = 'anon', barrier = FALSE, return = TRUE) {
+                      tag = 'anon', barrier = FALSE, return = TRUE, job = -1) {
   nwsStore(nws, 'task',
            list(type='EXEC',
                 barrier=barrier,
                 data=list(fun=fun, args=args, return=return),
-                tag=tag))
+                tag=tag,
+                job=job))
 }
 
 ## This is necessary since x[i] gets the i'th *column* of a data

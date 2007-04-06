@@ -46,3 +46,24 @@ nws 1.3.4
 2. Added prototype arguments to various setClass calls to prevent R from
 instantiating default nwsServer objects which caused warning message during
 build/installation.
+
+nws 1.3.5
+---------
+1. Added some underlying support needed for fault tolerant versions of
+   the eachElem and eachWorker sleigh methods.
+
+nws 1.3.6
+---------
+1. Modified the RNWSSleighWorker scripts to use the value of the sleigh
+   scriptDir option to help them find the nws package on the worker machines.
+2. Modified workerLoop.R to print out more information in less space in
+   the "worker info" variable.  Included the location of the log file
+   and the version of R.
+3. Fixed use of the export command in RNWSSleighWorker.sh that made it
+   incompatible with some shells other than bash and zsh.
+
+nws 1.4.0
+---------
+1. Added support for iterated operations.
+2. Modified workerLoop.R to log errors to the sleigh workspace, in
+   addition to the log file.

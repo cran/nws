@@ -31,7 +31,7 @@ nondeterministic choice will be made in 'multi' mode. In
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
+ws <- netWorkSpace('nws example')
 nwsDeclare(ws, 'pi', 'single')
 nwsStore(ws, 'pi', 2.171828182)
 nwsStore(ws, 'pi', 3.141592654)

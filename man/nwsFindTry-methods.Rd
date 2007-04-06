@@ -39,8 +39,8 @@ By default, defaultVal is NULL.
 
 \examples{
 \dontrun{
-ws = new('netWorkSpace', 'nws example')
-x = nwsFindTry(ws, 'abc', -1)
+ws <- netWorkSpace('nws example')
+x <- nwsFindTry(ws, 'abc', -1)
 }
 }
 

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2006, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -18,6 +18,28 @@
 #
 
 library(nws)
+
+quote_plus <- function(x) {
+  x <- gsub(';', '%3B', x, fixed=TRUE)
+  x <- gsub('/', '%2F', x, fixed=TRUE)
+  x <- gsub('?', '%3F', x, fixed=TRUE)
+  x <- gsub(':', '%3A', x, fixed=TRUE)
+  x <- gsub('@', '%40', x, fixed=TRUE)
+  x <- gsub('&', '%26', x, fixed=TRUE)
+  x <- gsub('=', '%3D', x, fixed=TRUE)
+  x <- gsub('+', '%2B', x, fixed=TRUE)
+  x <- gsub('$', '%24', x, fixed=TRUE)
+  x <- gsub(',', '%2C', x, fixed=TRUE)
+  x <- gsub(' ', '+', x, fixed=TRUE)
+  x
+}
+
+escape <- function(x) {
+  x <- gsub('&', '&amp;', x, fixed=TRUE)
+  x <- gsub('<', '&lt;', x, fixed=TRUE)
+  x <- gsub('>', '&gt;', x, fixed=TRUE)
+  x
+}
 
 monitor <- function(ws, filename) {
   nodelist <- nwsFind(ws, 'nodeList')
@@ -62,6 +84,149 @@ monitor <- function(ws, filename) {
           xlim=xlim, legend.text=as.character(tasks), col=col)
 
   dev.off()
+}
+
+getErrLog <- function(vws) {
+  refresh <- c('doit?op=showMonitor&monName=Sleigh+Monitor&wsName=',
+               quote_plus(nwsWsName(vws)))
+  refresh <- paste(refresh, collapse='')
+  it <- nwsIFindTry(vws, 'logError')
+  x <- list()
+  tmp <- '        <tr class="%s"><td>%s</td></tr>'
+  oe <- c('even', 'odd')
+  j <- 0
+  while (!is.null(i <- it())) {
+    x <- c(x, list(sprintf(tmp, oe[j %% 2 + 1], escape(i))))
+    j <- j + 1
+  }
+
+  if (length(x) > 0) {
+    hdr1 <- '<html>
+<head>
+  <title>Sleigh Worker Error Log</title>
+  <style>
+    ul.menu {
+      display: block;
+      padding: 0 0.3em 0.3em 0.3em;
+      background-color: #777;
+      margin: 0 0 1em 0;
+    }
+    ul.menu li {
+      display: inline;
+      padding: 0 0 0 1em;
+    }
+    ul.menu a:hover {
+      background-color: black;
+      text-decoration: none;
+    }
+    ul.menu a:link, ul.menu a:visited {
+      color: white;
+      text-decoration: none;
+    }
+    a:link, a:visited {
+      color: blue;
+      text-decoration: none;
+    }
+    .tableheader {
+      background-color: #cecece;
+    }
+    .even {
+      background-color: #eee;
+    }
+    .odd {
+      background-color: #dedede;
+    }
+    .error {
+      color: #EE1111;
+      font-weight: bold;
+      margin: 20;
+    }
+    .confirm {
+      color: #EE1111;
+      font-weight: bold;
+      margin: 20;
+    }
+    .info {
+      color: black;
+      margin: 20;
+    }
+    body {
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background-color: #efefef;
+      font-family: helvetica, sans-serif;
+    }
+    h1 {
+      padding: 0.3em;
+      background-color: #777;
+      color: white;
+      font-size: 1.6em;
+      font-style: italic;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+    th {
+      text-align: left;
+    }
+    table form {
+      margin-bottom: 0;
+    }
+    input[value=X] {
+      color: #EE1111;
+      font-weight: bold;
+    }
+    .nwstable {
+      margin: 0 0 0 1em;
+    }
+
+    input {
+      display: block;
+      width: 50em;
+      float: left;
+      margin-bottom: 10px;
+      margin-top: 1em;
+      margin-left: 1.5em;
+    }
+    label {
+      display: block;
+      text-align: right;
+      float: left;
+      width: 75px;
+      padding-right: 20px;
+      margin-top: 1em;
+    }
+    br {
+      clear: left;
+    }
+    .buttonSubmit {
+      width: 75px;
+      margin-left: 15px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+  <body>
+    <h1>Sleigh Worker Error Log</h1>
+    <ul class="menu">
+      <li><a href="doit?op=listWss"> NetWorkSpaces </a></li>
+      <li><a href="'
+
+    hdr2 <- '"> Refresh </a></li>
+    </ul>
+    <table cellpadding="4" class="nwstable">
+      <tbody>'
+
+    ftr <- '      </tbody>
+    </table>
+  </body>
+</html>
+'
+    c(paste(hdr1, refresh, hdr2, sep=''), x, ftr)
+  } else {
+    x
+  }
 }
 
 host <- 'localhost'
@@ -126,25 +291,33 @@ while (TRUE) {
     # open the workspace and create an image file from it
     vws <- nwsUseWs(bws@server, vwsname)  # XXX should use 'create=FALSE'
     # cat('opening sleigh workspace\n')
-    reqnum <- reqnum + 1
-    imagefile <- sprintf('mon_%d.png', reqnum)
-    monitor(vws, imagefile)
-    # cat('returned from monitor function\n')
 
-    # read the image file into a variable
-    size <- file.info(imagefile)$size
-    # cat(imagefile, 'has', size, 'bytes\n')
-    image <- rawToChar(readBin(imagefile, 'raw', size))
+    if (length(errs <- getErrLog(vws)) == 0) {
+      reqnum <- reqnum + 1
+      imagefile <- sprintf('mon_%d.png', reqnum)
+      monitor(vws, imagefile)
+      # cat('returned from monitor function\n')
 
-    # send the image data to the web interface and remove the image file
-    # cat('sending reply', nchar(image), 'bytes long\n')
-    nwsStore(bws, replyVarName, '3')
-    nwsStore(bws, replyVarName, 'content-type=image/png')
-    nwsStore(bws, replyVarName, 'cache-control=no-cache')
-    nwsStore(bws, replyVarName, 'refresh=5')
-    nwsStore(bws, replyVarName, image)
-    # cat('removing image file\n')
-    file.remove(imagefile)
+      # read the image file into a variable
+      size <- file.info(imagefile)$size
+      # cat(imagefile, 'has', size, 'bytes\n')
+      image <- rawToChar(readBin(imagefile, 'raw', size))
+
+      # send the image data to the web interface and remove the image file
+      # cat('sending reply', nchar(image), 'bytes long\n')
+      nwsStore(bws, replyVarName, '3')
+      nwsStore(bws, replyVarName, 'content-type=image/png')
+      nwsStore(bws, replyVarName, 'cache-control=no-cache')
+      nwsStore(bws, replyVarName, 'refresh=5')
+      nwsStore(bws, replyVarName, image)
+      # cat('removing image file\n')
+      file.remove(imagefile)
+    } else {
+      # display error message that have been logged to the workspace
+      nwsStore(bws, replyVarName, '1')
+      nwsStore(bws, replyVarName, 'cache-control=no-cache')
+      nwsStore(bws, replyVarName, do.call(paste, c(errs, list(''), list(sep='\n'))))
+    }
   } else {
     cat('bad request\n')
     nwsStore(bws, replyVarName, '2')
