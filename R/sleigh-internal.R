@@ -40,7 +40,7 @@ blendOptions <- function(options, new) {
 }
 
 # could this be a method --- it is invoked in the constructor?
-addWorker <- function(machine, wsName, id, workerCount, options) {
+addWorker <- function(machine, wsName, userWsName, id, workerCount, options) {
   # basic idea is (or should be): if we can get the appropriate
   # worker script running on the remote node, we just need to
   # give it enough env info to take care of the rest
@@ -48,6 +48,7 @@ addWorker <- function(machine, wsName, id, workerCount, options) {
   envVars = list(
     paste('RSleighName=', machine, sep=''),
     paste('RSleighNwsName=', wsName, sep=''),
+    paste('RSleighUserNwsName=', userWsName, sep=''),
     paste('RSleighID=', id, sep=''),
     paste('RSleighWorkerCount=', workerCount, sep=''),
     paste('RSleighScriptDir=', options$scriptDir, sep=''),

@@ -2,6 +2,7 @@
 \docType{class}
 \alias{sleigh-class}
 \alias{sleigh}
+\alias{sleighPro}
 \alias{initialize,sleigh-method}
 \alias{initialize}
 \title{Class ``sleigh"}

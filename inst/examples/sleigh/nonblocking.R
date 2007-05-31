@@ -1,15 +1,18 @@
-# based on nonblocking.py
 # simple program that multiplies value by 2.
+library(nws)
 
-worker <- function (wsName) {
-  ws = nwsUseWs(SleighNws@server, wsName)
-  while (1) {
-    task = nwsFetch(ws, 'task')
-    result = 2 * task
-    nwsStore(ws, 'result', c(task, result))
+worker <- function() {
+  repeat {
+    task <- nwsFetch(SleighUserNws, 'task')
+    result <- 2 * task
+    nwsStore(SleighUserNws, 'result', c(task, result))
   }
 }
 
+# change launch if you add nodeList parameter
+s <- sleigh()
+eo <- list(blocking=FALSE)
+eachWorker(s, worker, eo=eo)
 
 # read user input
 input <- readline('Please enter number of tasks:\n')
@@ -17,25 +20,12 @@ numTasks <- as.integer(input)
 if (is.na(numTasks) || numTasks < 1)
   stop("Please enter a positive number")
 
-# create a workspace to communicate with the workers
-server = new('nwsServer')
-wsName = nwsMktempWs(server)
-ws = nwsOpenWs(server, wsName)
+for (i in seq(length.out=numTasks))
+  nwsStore(s@userNws, 'task', i)
 
-# change launch if you add nodeList parameter
-s = sleigh()
-
-eo = list(blocking=FALSE)
-
-eachWorker(s, worker, wsName, eo=eo)
-
-for (i in 1:numTasks)
-  nwsStore(ws, 'task', i)
-
-for (i in 1:numTasks) {
-  result = nwsFetch(ws, 'result')
-  cat(result[1], ' times 2 is ', result[2], '\n')
+for (i in seq(length.out=numTasks)) {
+  result <- nwsFetch(s@userNws, 'result')
+  cat(result[1], 'times 2 is', result[2], '\n')
 }
   
-nwsClose(ws)
 stopSleigh(s)

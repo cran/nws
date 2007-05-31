@@ -19,21 +19,23 @@
 
 cmdLaunch <- function(verbose=FALSE) {
   if (is.na(verbose))
-    verbose = FALSE
+    verbose <- FALSE
   
   nwsName <- Sys.getenv('RSleighNwsName')
+  userNwsName <- Sys.getenv('RSleighUserNwsName')
   nwsHost <- Sys.getenv('RSleighNwsHost')
   nwsPort <- as.integer(Sys.getenv('RSleighNwsPort'))
   maxWorkerCount <- as.integer(Sys.getenv('RSleighWorkerCount'))
   name <- Sys.getenv('RSleighName')
 
-  launch(nwsName, nwsHost, nwsPort, maxWorkerCount, name, verbose)
+  launch(nwsName, nwsHost, nwsPort, maxWorkerCount, name, verbose, userNwsName)
 }
 
 
 launch <- function(nwsName, nwsHost, nwsPort, maxWorkerCount=-1,
-      name=Sys.info()['nodename'], verbose=FALSE) {
-  nws <- new('netWorkSpace', nwsName, nwsHost, nwsPort, useUse=TRUE, create=FALSE)    
+      name=Sys.info()['nodename'], verbose=FALSE, userNwsName='__default') {
+  nws <- netWorkSpace(nwsName, nwsHost, nwsPort, useUse=TRUE, create=FALSE)    
+  userNws <- nwsUseWs(nws@server, userNwsName, create=FALSE)
 
   rank <- nwsFetch(nws, 'rankCount')
   if (rank < 0) {
@@ -63,7 +65,7 @@ launch <- function(nwsName, nwsHost, nwsPort, maxWorkerCount=-1,
   workerCount = nwsFind(nws, 'workerCount')
 
   # enter the main worker loop
-  workerLoop(nws, displayName, rank, workerCount, verbose)
+  workerLoop(nws, displayName, rank, workerCount, verbose, userNws)
 
   # indicate exit.
   nwsStore(nws, 'bye', 1)

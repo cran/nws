@@ -17,8 +17,10 @@
 # USA
 #
 
-.onLoad <- function(lib, pkg) {
-  require(methods)
-  pkgpath <- file.path(lib, pkg)
-  blendOptions(defaultSleighOptions, computeDefaultSleighOptions(pkgpath))
+# this is now identical to the sleigh function,
+# since we've moved the status method into the
+# sleigh class.  we're keeping this function
+# for compatibility with the previous version.
+sleighPro <- function(...) {
+  new("sleigh", ...)
 }

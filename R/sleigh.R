@@ -21,6 +21,16 @@
 # invocations. Their names are common to workers and sleighs.
 barrierNames <- list('barrier0', 'barrier1')
 
+# heuristic test for a closure
+isClosure <- function(fun) {
+  if (is.function(fun)) {
+    e <- environment(fun)
+    !is.null(e) && identical(getPackageName(e), "") &&
+        length(ls(e, all.names=FALSE)) > 0
+  } else {
+    FALSE
+  }
+}
 
 ############################################################################
 #  Sleigh code
@@ -30,40 +40,11 @@ sleigh <- function(...) {
   new("sleigh",...)
 }
 
-####
-# sleigh class
-#
-# represents a collection R processes running on a simple network of
-# workstation pulling in tasks and generating results.
+defaultSleighOptions <- new.env()
 
-
-setClass('sleigh',
-         representation(nodeList='character', nws='netWorkSpace',
-                        nwsName='character', nwss='nwsServer',
-                        options='environment', state='environment'),
-         prototype(nws=NULL, nwss=NULL))
-
-setMethod('initialize', 'sleigh',
-function(.Object, ...) {
-
-  argList = list(...)
-
-  # backward compatibility
-  # check if nodeList is specified in the old way
-  if (length(argList) > 0) {
-    argName = names(argList[1])
-    if (is.null(argName) || nchar(argName) == 0) {
-      if (!is.vector(argList[[1]]))
-        stop('argument 1 has no name and is not a vector')
-      names(argList)[1] = 'nodeList'
-      warning('nodeList should be passed using named variable, nodeList')
-    }
-  }
-
+computeDefaultSleighOptions <- function(pkgpath) {
   # compute default value for scriptDir
-  nwsDir = .path.package('nws', quiet=TRUE)
-  if (is.null(nwsDir)) scriptDir = getwd()
-  else scriptDir = file.path(nwsDir, 'bin')
+  scriptDir = file.path(pkgpath, 'bin')
 
   # compute default value for nwsHost
   nwsHost = Sys.getenv('RSleighNwsHost')
@@ -93,29 +74,66 @@ function(.Object, ...) {
     rprog = file.path(rhome, 'bin', 'R')
   }
 
-  defaultSleighOptions <-
-    list(
-         nwsHost = nwsHost,
-         nwsPort = nwsPort,
-         outfile = NULL,
-         launch = 'local',
-         workerCount = 3,
-         nodeList = c('localhost','localhost','localhost'),
-         scriptExec = scriptExec,
-         wrapperDir = scriptDir, 
-         scriptDir = scriptDir, 
-         scriptName = scriptName,
-	 workerWrapper = workerWrapper, 
-         workingDir = getwd(),
-         logDir = NULL,
-         user = Sys.info()[['user']],
-         wsNameTemplate = 'sleigh_ride_%04d',
-         verbose = FALSE,
-         rprog = rprog
-         )
+  list(
+      nwsHost = nwsHost,
+      nwsPort = nwsPort,
+      outfile = NULL,
+      launch = 'local',
+      workerCount = 3,
+      nodeList = c('localhost','localhost','localhost'),
+      scriptExec = scriptExec,
+      wrapperDir = scriptDir, 
+      scriptDir = scriptDir, 
+      scriptName = scriptName,
+      workerWrapper = workerWrapper, 
+      workingDir = getwd(),
+      logDir = NULL,
+      user = Sys.info()[['user']],
+      wsNameTemplate = 'sleigh_ride_%04d',
+      userWsNameTemplate = 'sleigh_user_%04d',
+      verbose = FALSE,
+      rprog = rprog
+      )
+}
+
+####
+# sleigh class
+#
+# represents a collection R processes running on a simple network of
+# workstation pulling in tasks and generating results.
+
+
+setClass('sleigh',
+         representation(nodeList='character', nws='netWorkSpace',
+                        userNws='netWorkSpace', nwsName='character',
+                        userNwsName='character', nwss='nwsServer',
+                        options='environment', state='environment'),
+         prototype(nws=NULL, userNws=NULL, nwss=NULL))
+
+setMethod('initialize', 'sleigh',
+function(.Object, ...) {
+
+  argList = list(...)
+
+  # backward compatibility
+  # check if nodeList is specified in the old way
+  if (length(argList) > 0) {
+    argName = names(argList[1])
+    if (is.null(argName) || nchar(argName) == 0) {
+      if (!is.vector(argList[[1]]))
+        stop('argument 1 has no name and is not a vector')
+      names(argList)[1] = 'nodeList'
+      warning('nodeList should be passed using named variable, nodeList')
+    }
+  }
+
+  # sanity check the optional arguments
+  unrecog = names(argList)[!names(argList) %in% ls(defaultSleighOptions)]
+  if (length(unrecog) > 0)
+    stop('unused argument(s) ', paste(unrecog, collapse=', '))
 
   .Object@options = new.env()
-  blendOptions(.Object@options, defaultSleighOptions)
+  blendOptions(.Object@options, as.list(defaultSleighOptions))
   blendOptions(.Object@options, argList)
   opts = .Object@options
 
@@ -138,8 +156,10 @@ function(.Object, ...) {
   # set up the sleigh's netWorkSpace.
   .Object@nwss = new('nwsServer', serverHost=opts$nwsHost, port=opts$nwsPort)
   .Object@nwsName = nwsMktempWs(.Object@nwss, opts$wsNameTemplate)
+  .Object@userNwsName = nwsMktempWs(.Object@nwss, opts$userWsNameTemplate)
   # NEED TO ADD ERROR HANDLING CODE HERE
   .Object@nws = nwsOpenWs(.Object@nwss, .Object@nwsName)
+  .Object@userNws = nwsOpenWs(.Object@nwss, .Object@userNwsName)
 
   # initialize for monitoring
   nwsDeclare(.Object@nws, 'nodeList', 'single')
@@ -166,7 +186,7 @@ function(.Object, ...) {
 
       # since we are calling it in the constructor, maybe this cannot be
       # a method?
-      addWorker(.Object@nodeList[i], .Object@nwsName, i, .Object@state$workerCount, opts)
+      addWorker(.Object@nodeList[i], .Object@nwsName, .Object@userNwsName, i, .Object@state$workerCount, opts)
     }
   }
   else if (opts$launch == 'service') {
@@ -185,6 +205,7 @@ function(.Object, ...) {
       if (opts$verbose)
         opts$outfile = sprintf('%s_%04d.txt', .Object@nwsName, i)
       # XXX is '@' the best delimiter?
+      # XXX this should include userNwsName
       request = sprintf('@%s@%d@%d@%s@%s@%s@%s',
                         .Object@nwsName,
                         .Object@state$workerCount,
@@ -213,13 +234,14 @@ function(.Object, ...) {
       if (opts$verbose)
         opts$outfile = sprintf('%s_%04d.txt', .Object@nwsName, i)
 
-      addWorker(.Object@nodeList[i], .Object@nwsName, i, .Object@state$workerCount, opts)
+      addWorker(.Object@nodeList[i], .Object@nwsName, .Object@userNwsName, i, .Object@state$workerCount, opts)
     }
   }
   else if (opts$launch == 'web') {
     cat(sprintf("Your ride is %s, don't forget 'DeleteMe...'.\n", .Object@nwsName))
-    nwsStore(.Object@nws, 'runMe', sprintf("library('nws'); launch('%s', '%s', %d)",
-                                           .Object@nwsName, opts$nwsHost, opts$nwsPort))
+    nwsStore(.Object@nws, 'runMe', sprintf("library(nws); launch('%s', '%s', %d, userNwsName='%s')",
+                                           .Object@nwsName, opts$nwsHost, opts$nwsPort,
+                                           .Object@userNwsName))
 
     tryCatch(nwsFetch(.Object@nws, 'deleteMeWhenAllWorkersStarted'), error=function(...) 0)
     nwsDeleteVar(.Object@nws, 'runMe')
@@ -239,6 +261,70 @@ setMethod('show', 'sleigh', function(object) {
   cat(object@state$workerCount, ' Worker Nodes:\t',
       paste(object@nodeList, collapse=', '), '\n', sep='')
   cat('\n')
+})
+
+# return a list that contains two values: workerCount and status
+setGeneric('status', function(.Object, closeGroup=FALSE, timeout=0) standardGeneric('status'))
+setMethod('status', 'sleigh',
+function(.Object, closeGroup=FALSE, timeout=0) {
+  if (.Object@state$rankCount < 0) {
+    # join phase completed before
+    return(list(numWorkers=workerCount(.Object), closed=1))
+  }
+  else {
+    sleepTime = initialSleep = min(2.0, timeout)
+    repeatedSleep = 1.0
+    startTime = proc.time()[3]
+
+    repeat {
+      n = nwsFetch(.Object@nws, 'rankCount')
+      if (n < 0) {
+        # all workers joined
+        if (.Object@options$verbose)
+          cat('all ', workerCount(.Object), ' worker(s) have started\n')
+        # this should not happened
+        if (.Object@state$workerCount != nwsFind(.Object@nws, 'workerCount'))
+          stop('Value for workerCount is not consistent.')
+	.Object@state$rankCount = -1
+        nwsStore(.Object@nws, 'rankCount', .Object@state$rankCount)
+        return(list(numWorkers=workerCount(.Object), closed=1))
+      }
+      else {
+        # three choices: close now, return not closed, or
+        # sleep and try again
+        if (proc.time()[3] - startTime >= timeout) {
+          # time is up, so either close the join, or
+          # return the current status
+          if (closeGroup) {
+            if (.Object@options$verbose)
+              cat('closing group: ', n, ' workers\n')
+            
+            .Object@state$workerCount = n
+            nwsStore(.Object@nws, 'workerCount', .Object@state$workerCount)
+            .Object@state$rankCount = -1
+            nwsStore(.Object@nws, 'rankCount', .Object@state$rankCount)
+	    return(list(numWorkers=workerCount(.Object), closed=1))
+          }
+          else {
+            if (.Object@options$verbose)
+              cat('group not formed: ', n, ' worker(s)\n')
+
+	    .Object@state$rankCount = n
+            nwsStore(.Object@nws, 'rankCount', .Object@state$rankCount)
+	    return(list(numWorkers=.Object@state$rankCount, closed=0))
+          }
+        }
+        else {
+          if (.Object@options$verbose)
+            cat ('only ', n, ' worker(s): sleeping ...\n')
+
+          nwsStore(.Object@nws, 'rankCount', n)
+          Sys.sleep(sleepTime)
+          sleepTime = repeatedSleep
+        }
+      }
+    }
+  }
 })
 
 if (! isGeneric('close'))
@@ -297,21 +383,39 @@ function(.Object, fun, ..., eo=NULL, DEBUG=FALSE) {
 
   blocking = TRUE
   accumulator = NULL
+  closure = NULL
   if (!is.null(eo)) {
     if (is.environment(eo) || is.list(eo)) {
       if (!is.null(eo$blocking)) blocking = as.logical(eo$blocking)
       accumulator = eo$accumulator
+      if (!is.null(eo$closure)) closure = as.logical(eo$closure)
 
       # check for unknown options
       if (is.list(eo)) {
-        eo$blocking <- eo$accumulator <- NULL
-        if (length(eo) > 0) warning('ignoring unknown option(s): ', paste('"', names(eo), '"', sep='', collapse=', '))
+        eo$blocking <- eo$accumulator <- eo$closure <- NULL
+        if (length(eo) > 0)
+          warning('ignoring unknown option(s): ',
+            paste('"', names(eo), '"', sep='', collapse=', '))
       }
     }
     else {
       stop('options arg must be a list or environment.')
     }
   }
+
+  # issue a warning if fun seems like a closure, and they aren't
+  # explicitly enabled via the closure option.
+  if (is.null(closure)) {
+    closure <- TRUE
+    if (isClosure(fun))
+      warning('"fun" argument looks like a closure without enabling ',
+        'via closure option', immediate.=TRUE)
+  }
+
+  # remove the enclosing environment of the function if closures are not
+  # allowed.
+  if (!closure)
+    environment(fun) <- globalenv()
 
   # use alternating barrier to sync eachWorker invocations with the workers.
   bx = .Object@state$bx
@@ -393,6 +497,7 @@ function(.Object, fun, elementArgs=list(), fixedArgs=list(), eo=NULL, DEBUG=FALS
   chunkSize = 1
   accumulator = NULL
   elementFunc = NULL
+  closure = NULL
   if (!is.null(eo)) {
     if (is.environment(eo) || is.list(eo)) {
       argPermute = eo$argPermute
@@ -402,17 +507,35 @@ function(.Object, fun, elementArgs=list(), fixedArgs=list(), eo=NULL, DEBUG=FALS
       if (!is.null(eo$chunkSize)) chunkSize = max(eo$chunkSize, 1)
       accumulator = eo$accumulator
       elementFunc = eo$elementFunc
+      if (!is.null(eo$closure)) closure = as.logical(eo$closure)
 
       # check for unknown options
       if (is.list(eo)) {
-        eo$argPermute <- eo$blocking <- eo$loadFactor <- eo$by <- eo$chunkSize <- eo$accumulator <- eo$elementFunc <- NULL
-        if (length(eo) > 0) warning('ignoring unknown option(s): ', paste('"', names(eo), '"', sep='', collapse=', '))
+        eo$argPermute <- eo$blocking <- eo$loadFactor <- eo$by <-
+          eo$chunkSize <- eo$accumulator <- eo$elementFunc <- eo$closure <- NULL
+        if (length(eo) > 0)
+          warning('ignoring unknown option(s): ',
+            paste('"', names(eo), '"', sep='', collapse=', '))
       }
     }
     else {
       stop('options arg must be a list or environment.')
     }
   }
+
+  # issue a warning if fun seems like a closure, and they aren't
+  # explicitly enabled via the closure option.
+  if (is.null(closure)) {
+    closure <- TRUE
+    if (isClosure(fun))
+      warning('"fun" argument looks like a closure without enabling ',
+        'via closure option', immediate.=TRUE)
+  }
+
+  # remove the enclosing environment of the function if closures are not
+  # allowed.
+  if (!closure)
+    environment(fun) <- globalenv()
 
   if (!is.list(elementArgs)) elementArgs = list(elementArgs)
   if (!is.list(fixedArgs)) fixedArgs = list(fixedArgs)

@@ -1,26 +1,25 @@
 exportClasses(nwsServer, netWorkSpace, sleigh, sleighPending)
 
-
 # netWorkSpace class
-exportMethods(nwsClose, nwsDeclare, nwsDeleteVar, 
-              nwsFetch, nwsFetchTry, nwsFind, nwsFindTry, 
-              nwsIFetch, nwsIFetchTry, nwsIFind, nwsIFindTry, 
-              nwsListVars, nwsStore, nwsWsName, nwsVariable)
+exportMethods(nwsClose, nwsDeclare, nwsDeleteVar,
+              nwsFetch, nwsFetchTry, nwsFind, nwsFindTry,
+              nwsFetchFile, nwsFetchTryFile, nwsFindFile, nwsFindTryFile,
+              nwsIFetch, nwsIFetchTry, nwsIFind, nwsIFindTry,
+              nwsListVars, nwsStore, nwsStoreFile, nwsWsName, nwsVariable,
+              nwsServerObject)
 
 # nwsServer class
-exportMethods(nwsListWss, nwsMktempWs, nwsOpenWs, 
+exportMethods(nwsListWss, nwsMktempWs, nwsOpenWs,
               nwsUseWs, nwsDeleteWs, nwsListWss)
 
 # sleigh class
-exportMethods(eachWorker, eachElem, stopSleigh, rankCount, workerCount)
+exportMethods(eachWorker, eachElem, stopSleigh, rankCount, workerCount,
+              netWorkSpaceObject, status)
 
 # sleighPending class
 exportMethods(checkSleigh, waitSleigh)
 
-# functions used internally, therefore not exported
-# all functions defined in sleigh.internal.R
-# export(addWorker, storeTask, getElement, countElement,
-#        blendOptions, enquote, docall)
-
-export(nwsServer, netWorkSpace, close, launch, cmdLaunch, sshcmd, lsfcmd, rshcmd,
-       ccscmd, envcmd, scriptcmd, sleigh, workerLoop, initialize)
+# misc functions
+export(nwsServer, netWorkSpace, close, launch, cmdLaunch, sshcmd, lsfcmd,
+       rshcmd, ccscmd, envcmd, scriptcmd, sleigh, sleighPro, workerLoop,
+       initialize, lsfSleigh, isClosure, defaultSleighOptions)

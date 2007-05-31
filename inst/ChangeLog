@@ -67,3 +67,31 @@ nws 1.4.0
 1. Added support for iterated operations.
 2. Modified workerLoop.R to log errors to the sleigh workspace, in
    addition to the log file.
+
+nws 1.5.0
+---------
+1. Fixed a bug in RNWSSleighWorker.py that causes a sleigh to fail.
+   This is particularly a problem on Windows, where RNWSSleighWorker.py
+   is the default worker script.
+2. Created a workspace when constructing a sleigh that is reserved for
+   the user.  The worker functions can access it via the SleighUserNws
+   variable.
+3. Added nwsStoreFile, nwsFindFile, nwsFileTryFile, nwsFetchFile, and
+   nwsFetchTryFile methods to the netWorkSpace class.
+4. Added error checking for optional arguments passed to sleigh,
+   netWorkSpace, nwsOpenWs, and nwsUseWs.  That can help detect spelling
+   errors that might otherwise go undetected.
+5. Added the "closure" option to eachWorker and eachElem.  If it is set
+   to FALSE, the enclosing environment will be removed, which may
+   prevent transferring a huge amount of data in the serialized function
+   of every task object.
+6. Added warnings to eachWorker and eachElem if the worker function
+   looks like a closure, but the "closure" option hasn't been explicitly
+   specified.
+7. Added status method to sleigh class.
+8. Included the lsfSleigh launch function in the standard version of nws.
+9. Removed sleighPro class, since all its functionality is in the
+   standard sleigh class.
+10. Included a new parallel kmeans sleigh example.
+11. Added defaultSleighOptions environment that can be used to change
+   the default options when constructing sleigh objects.

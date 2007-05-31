@@ -29,8 +29,10 @@ except ImportError:
 
 if sys.platform.startswith('win'):
     _TMPDIR = tempfile.gettempdir() or '\\TEMP'
+    _NULFILE = 'NUL'
 else:
     _TMPDIR = tempfile.gettempdir() or '/tmp'
+    _NULFILE = '/dev/null'
 
 def main():
     # initialize variables from environment
@@ -41,6 +43,8 @@ def main():
     outfile = Env.get('RSleighWorkerOut')
     if outfile:
         outfile = os.path.join(logDir, os.path.split(outfile)[1])
+    else:
+        outfile = _NULFILE
     Env['RSleighLogFile'] = outfile
     verbose = Env.has_key('RSleighWorkerOut') and 'TRUE' or 'FALSE'
     nwsName = Env['RSleighNwsName']

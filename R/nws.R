@@ -186,11 +186,15 @@ setMethod('nwsMktempWs', 'nwsServer',
 
 setMethod('nwsOpenWs', 'nwsServer',
           function(.Object, wsName, space=NULL, ...) {
-            # if invoked diectly by user, we need to create a space
+            # sanity check the optional arguments
+            opts = list(...)
+            unrecog = names(opts)[!names(opts) %in% c('create', 'persistent')]
+            if (length(unrecog) > 0)
+              stop('unused argument(s) ', paste(unrecog, collapse=', '))
+
+            # if invoked directly by user, we need to create a space
             # instance. if invoked via networkspace constructor, use the
             # space passed in.
-
-            # ... because there may be option args related to persistence.
             if (is.null(space)) {
               serverWrap = new.env()
               serverWrap$server = .Object
@@ -199,7 +203,6 @@ setMethod('nwsOpenWs', 'nwsServer',
 
             op = 'open ws'
             owner = sprintf('%d', Sys.getpid())
-            opts = list(...)
             p = 'no'
             if (!is.null(opts$persistent) && opts$persistent) p = 'yes'
 
@@ -229,6 +232,12 @@ setMethod('nwsOpenWs', 'nwsServer',
 
 setMethod('nwsUseWs', 'nwsServer',
           function(.Object, wsName, space=NULL, ...) {
+            # sanity check the optional arguments
+            opts = list(...)
+            unrecog = names(opts)[!names(opts) %in% c('create', 'persistent')]
+            if (length(unrecog) > 0)
+              stop('unused argument(s) ', paste(unrecog, collapse=', '))
+
             # see nwsOpenWs
             if (is.null(space)) {
               serverWrap = new.env()
@@ -238,7 +247,6 @@ setMethod('nwsUseWs', 'nwsServer',
 
             op = 'use ws'
             owner = ''
-            opts = list(...)
             p = 'no'
 
             s = .Object@nwsSocket
@@ -281,8 +289,12 @@ setClass('netWorkSpace', representation(server='nwsServer',
 setMethod('initialize', 'netWorkSpace',
           function(.Object, wsName='__default', serverHost='localhost',
                    port=8765, useUse=FALSE, serverWrap=NULL, ...) {
-            # ask gw what is the right way to overload init/constructor func. and call by ref too.
-            # ... because there may be option args related to persistence.
+            # sanity check the optional arguments
+            argNames = names(list(...))
+            unrecog = argNames[!argNames %in% c('create', 'persistent')]
+            if (length(unrecog) > 0)
+              stop('unused argument(s) ', paste(unrecog, collapse=', '))
+
             .Object@wsName = wsName
 
             # if invoked (indirectly) via a server openWs or useWs
@@ -332,12 +344,17 @@ setGeneric('nwsFetch', function(.Object, xName) standardGeneric('nwsFetch'))
 setGeneric('nwsFetchTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsFetchTry'))
 setGeneric('nwsFind', function(.Object, xName) standardGeneric('nwsFind'))
 setGeneric('nwsFindTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsFindTry'))
+setGeneric('nwsFetchFile', function(.Object, xName, fObj) standardGeneric('nwsFetchFile'))
+setGeneric('nwsFetchTryFile', function(.Object, xName, fObj) standardGeneric('nwsFetchTryFile'))
+setGeneric('nwsFindFile', function(.Object, xName, fObj) standardGeneric('nwsFindFile'))
+setGeneric('nwsFindTryFile', function(.Object, xName, fObj) standardGeneric('nwsFindTryFile'))
 setGeneric('nwsIFetch', function(.Object, xName) standardGeneric('nwsIFetch'))
 setGeneric('nwsIFetchTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsIFetchTry'))
 setGeneric('nwsIFind', function(.Object, xName) standardGeneric('nwsIFind'))
 setGeneric('nwsIFindTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsIFindTry'))
 setGeneric('nwsListVars', function(.Object, wsName='', showDataFrame=FALSE) standardGeneric('nwsListVars'))
 setGeneric('nwsStore', function(.Object, xName, xVal) standardGeneric('nwsStore'))
+setGeneric('nwsStoreFile', function(.Object, xName, fObj, n=-1) standardGeneric('nwsStoreFile'))
 setGeneric('nwsWsName', function(.Object) standardGeneric('nwsWsName'))
 setGeneric('nwsVariable', function(.Object, xName, mode=c('fifo','lifo','multi','single'),
            env=parent.frame(), force=FALSE, quietly=FALSE) standardGeneric('nwsVariable'))
@@ -446,6 +463,72 @@ setMethod('nwsFindTry', 'netWorkSpace',
                                  .Object@server@nwsSocket, .Object@wsName,
                                  xName, 'findTry', defaultVal),
                     error=function(e) defaultVal)
+          })
+
+# helper function for fetchFile/findFile methods.
+nwsRetrieveFile <- function(cprot, s, ws, xName, op, fObj) {
+  if (missing(fObj)) {
+    stop('no value specified for fObj argument')
+  }
+
+  if (is.character(fObj)) {
+    f <- file(fObj, 'wb')
+    on.exit(close(f))
+  } else {
+    if (!is(fObj, "file") || !isOpen(fObj, "r") || summary(fObj)$text != "binary")
+      stop('fobj must be a binary mode file object opened for reading')
+    f <- fObj
+  }
+
+  sn <- nchar(c(op, ws, xName))
+  writeBin(charToRaw(sprintf('0003%020d%s%020d%s%020d%s',
+                          sn[1], op,
+                          sn[2], ws,
+                          sn[3], xName)), s)
+
+  status <- as.integer(nwsRecvN(s, 4))
+
+  # even if failure status, read the rest of the bytes
+  desc <- as.integer(nwsRecvN(s, 20))
+  if (cprot) cookie <- nwsRecvN(s, 40)
+  n <- as.integer(nwsRecvN(s, 20))
+
+  blen <- 16 * 1024
+  while (n > 0) {
+    d <- nwsRecvN(s, min(n, blen))
+    if (nchar(d) == 0) stop('NWS server connection dropped')
+    writeBin(charToRaw(d), f)
+    n <- n - nchar(d)
+  }
+
+  if (status != 0) stop('retrieval failed')
+  TRUE
+}
+
+setMethod('nwsFetchFile', 'netWorkSpace',
+          function(.Object, xName, fObj) {
+            nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
+                            .Object@wsName, xName, 'fetch', fObj)
+          })
+
+setMethod('nwsFetchTryFile', 'netWorkSpace',
+          function(.Object, xName, fObj) {
+            tryCatch(nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
+                                     .Object@wsName, xName, 'fetchTry', fObj),
+                     error=function(e) FALSE)
+          })
+
+setMethod('nwsFindFile', 'netWorkSpace',
+          function(.Object, xName, fObj) {
+            nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
+                            .Object@wsName, xName, 'find', fObj)
+          })
+
+setMethod('nwsFindTryFile', 'netWorkSpace',
+          function(.Object, xName, fObj) {
+            trycatch(nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
+                                     .Object@wsName, xName, 'findTry', fObj),
+                     error=function(e) FALSE)
           })
 
 setMethod('nwsIFetch', 'netWorkSpace',
@@ -562,6 +645,83 @@ nwsStoreInternal <- function(s, ws, xName, xVal) {
 setMethod('nwsStore', 'netWorkSpace',
           function(.Object, xName, xVal) {
             nwsStoreInternal(.Object@server@nwsSocket, .Object@wsName, xName, xVal)
+          })
+
+setMethod('nwsStoreFile', 'netWorkSpace',
+          function(.Object, xName, fObj, n=0) {
+            ws <- .Object@wsName
+            s <- .Object@server@nwsSocket
+            op <- 'store'
+
+            desc <- nwsRFP + 1  # R Fingerprint and raw data
+
+            if (missing(fObj)) {
+              stop('no value specified for fObj argument')
+            }
+
+            # if fObj is a character string, handle it specially
+            if (is.character(fObj)) {
+              f <- file(fObj, 'rb')
+              on.exit(close(f))
+            } else {
+              if (!is(fObj, "file") || !isOpen(fObj, "w") || summary(fObj)$text != "binary")
+                stop('fobj must be a binary mode file object opened for writing')
+              f <- fObj
+            }
+      
+            fsize <- file.info(summary(f)$description)$size
+            fpos <- seek(f)
+            fbytes <- fsize - fpos
+            n <- if (n <= 0) fbytes else min(n, fbytes)
+            if (n <= 0) return(FALSE)
+
+            descTxt <- sprintf('%020i', desc) # would prefer to use unsigned here.
+
+            sn <- nchar(c(op, ws, xName, descTxt))
+            writeBin(charToRaw(sprintf('0005%020d%s%020d%s%020d%s%020d%s%020d',
+                                       sn[1], op,
+                                       sn[2], ws,
+                                       sn[3], xName,
+                                       sn[4], descTxt,
+                                       n)), s)
+
+            blen <- 16 * 1024
+            while (n > 0) {
+              d <- readBin(f, what='raw', n=min(blen, n))
+              dlen <- length(d)
+              if (dlen <= 0)
+                break
+              writeBin(d, s)
+              n <- n - dlen
+            }
+
+            if (n > 0) {
+              # I don't thing this should ever happen unless the file
+              # size computation is incorrect, but I really don't want
+              # to corrupt the server connection
+              warning('unable to read all the data in file ',
+                      summary(f)$description, ' [size: ', fsize,
+                      'bytes]: padding value in workspace variable')
+              blen <- 1024
+              buffer <- raw(blen)
+              while (n > 0) {
+                if (blen <= n) {
+                  writeBin(buffer, s)
+                  n <- n - dlen
+                } else {
+                  writeBin(raw(n), s)
+                  break
+                }
+              }
+            }
+
+            # status, barely used at the moment.
+            status <- as.integer(nwsRecvN(s, 4))
+
+            if (status != 0) {
+              stop('store file failed')
+            }
+            TRUE
           })
 
 setMethod('nwsWsName', 'netWorkSpace', function(.Object) {.Object@wsName})

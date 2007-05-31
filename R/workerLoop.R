@@ -42,13 +42,14 @@ logDebug <- function(...) {
   logMsg(..., var='logDebug')
 }
 
-workerLoop <- function(nws, displayName, rank, workerCount, verbose) {
+workerLoop <- function(nws, displayName, rank, workerCount, verbose, userNws) {
   bx <- 1
 
   # put these into global environment so both worker loop and worker
   # code have access
   SleighName <<- displayName
   SleighNws <<- nws
+  SleighUserNws <<- userNws
   SleighRank <<- rank
   SleighWorkerCount <<- workerCount
 
