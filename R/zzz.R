@@ -17,8 +17,14 @@
 # USA
 #
 
+nwsPkgInfo <- local({
+  function()
+    c(name=pkgName, version=packageDescription(pkgName, fields='Version'))
+})
+
 .onLoad <- function(lib, pkg) {
   require(methods)
   pkgpath <- file.path(lib, pkg)
   blendOptions(defaultSleighOptions, computeDefaultSleighOptions(pkgpath))
+  environment(nwsPkgInfo)$pkgName <- pkg
 }

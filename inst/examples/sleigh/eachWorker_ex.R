@@ -1,4 +1,5 @@
-library(nws)
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
 
 worker <- function() {
   id <- SleighRank

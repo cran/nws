@@ -37,7 +37,9 @@ x <- seq(-2.0, 0.6, length.out=240)
 y <- seq(-1.3, 1.3, length.out=240)
 m <- 100
 
-library(nws); s <- sleigh()
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
+s <- sleigh()
 opts <- list(elementFunc=ea(), chunkSize=length(x)*10, loadFactor=4)
 z <- unlist(eachElem(s, mandelbrot, eo=opts))
 dim(z) <- c(length(x), length(y))

@@ -2,7 +2,9 @@
 
 source('nuclearBootstrapInit.R')
 
-library(nws); s <- sleigh()
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
+s <- sleigh()
 
 R <- 20000
 y <- ceiling(R / workerCount(s))  # rounding up

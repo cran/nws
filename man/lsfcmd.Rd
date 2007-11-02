@@ -2,20 +2,44 @@
 \alias{lsfcmd}
 \title{Sleigh Auxiliary Function}
 \description{
-This function indicates that LSF will be used to launch sleigh workers. 
+This function is used by the sleigh constructor when starting workers on
+remote nodes using the LSF bsub command.  Note that it doesn't actually start
+any workers directly: it simply returns the program name and arguments
+to start a worker on the specified node.
 }
-\seealso{\code{\link{sleigh}}}
+
+\usage{
+lsfcmd(host, options)
+}
+
+\note{
+lsfcmd is not intended to be called by the user.
+It is called by the sleigh constructor when specified via the
+sleigh launch argument.  You may want to execute it when debugging
+your sleigh option settings, but that can also be accomplished by
+setting the sleigh verbose argument to TRUE.
+}
 
 \details{
-This function is only meant to be passed through optional argument, 'launch', 
-in the sleigh constructor.
+lsfcmd simply returns the value "bsub".
 }
+
+\arguments{
+\item{host}{Name from the nodeList.  This is currently ignored.}
+\item{options}{An environment or list.  This is currently ignored.}
+}
+
+\value{
+The character mode vector c('bsub').
+}
+
+\seealso{\code{\link{sleigh}}}
 
 \examples{
 \dontrun{
-s = sleigh(launch=lsfcmd)
+# Create a sleigh with workers on nodes n1 and n2 started via lsf:
+s <- sleigh(launch=lsfcmd, nodeList=rep('fake', 10))
 }
 }
 
-\keyword{methods}
-\keyword{internal}
+\keyword{utilities}

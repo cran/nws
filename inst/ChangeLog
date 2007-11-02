@@ -95,3 +95,41 @@ nws 1.5.0
 10. Included a new parallel kmeans sleigh example.
 11. Added defaultSleighOptions environment that can be used to change
    the default options when constructing sleigh objects.
+
+nws 1.5.1
+---------
+1. Added a stdout/stderr redirection to RNWSSleighWorker.sh to avoid
+   getting error messages on the user's console when calling stopSleigh.
+2. Added parallel random forest examples/benchmarks.
+3. Improved some of the examples to be useful for benchmarking.
+
+nws 1.6.0
+---------
+1. The "Pro" version of nws is renamed to nwsPro.
+2. Added export and unexport methods to the sleigh class.
+
+nws 1.6.1
+---------
+1. Added workerInfo method to sleigh class.
+2. Changed default value of 'user' parameter for sleigh constructor to NULL.
+   When using ssh, this means the '-l' option isn't used, which allows the
+   ssh config file to be used to use host specific users, which is very useful
+   in a heterogeneous environment.
+3. Modified the values in the "worker info" variable in the sleigh workspace
+   to include the nws version string.
+4. Reduced volume of output to the log file in verbose mode.
+
+nws 1.6.2
+---------
+1. Removed sleigh dependency on nwsserver >= 1.4.0.  The workerInfo and
+   export methods won't work, but the workers should not die if using an
+   older server.
+2. Changed RNWSSleighWorker.py to make the worker process a process group
+   leader (on Unix) to aid in kill any forked child processes.
+3. Fixed bug in RNWSSleighWorker.py caused by adding '%in%' into a string
+   that was processed using the '%' operator.  This bug was introduced in
+   version 1.6.0, but would only be a problem on Windows (by default).
+4. Fixed bug in SleighWorkerWrapper.sh that occurred if using some shells
+   other than bash and zsh.
+5. Exported the close method as a method, rather than a function in the
+   NAMESPACE file.

@@ -1,27 +1,52 @@
 \name{sshcmd}
 \alias{sshcmd}
-\title{sleigh Auxiliary Function}
+\title{Sleigh Auxiliary Function}
 \description{
-This function indicates that SSH will be used to launch sleigh workers.
+This function is used by the sleigh constructor when starting workers on
+remote nodes using the ssh command.  Note that it doesn't actually start
+any workers directly: it simply returns the program name and arguments
+to start a worker on the specified node.
 }
-\seealso{\code{\link{sleigh}}}
+
+\usage{
+sshcmd(host, options)
+}
+
+\note{
+sshcmd is not intended to be called by the user.
+It is called by the sleigh constructor when specified via the
+sleigh launch argument.  You may want to execute it when debugging
+your sleigh option settings, but that can also be accomplished by
+setting the sleigh verbose argument to TRUE.
+}
 
 \details{
-This function is only meant to be passed through optional argument, 'launch' 
-in the sleigh constructor.
+sshcmd currently uses the following options: 'user', 'wrapperDir',
+'workerWrapper', and 'python'.  The 'user' option is the most useful.
 }
+
+\arguments{
+\item{host}{Name of the worker machine to be started.}
+\item{options}{An environment or list that contains information used to
+construct the command.  See defaultSleighOptions for more information.}
+}
+
+\value{
+A character mode vector, whose first element is the command that will be
+executed to start the worker, and whose subsequent elements are the
+arguments to the command.
+}
+
+\seealso{\code{\link{sleigh}}, \code{\link{defaultSleighOptions}}}
 
 \examples{
 \dontrun{
-# Both master and sleigh workers run on Linux.
-s = sleigh(launch=sshcmd)
+# Create a sleigh with workers on nodes n1 and n2 started via ssh:
+s <- sleigh(launch=sshcmd, nodeList=c('n1', 'n2'))
 
-# master runs on Windows and sleigh workers run on Linux. 
-# Since Windows and Linux have different file structure, 
-# we need to specify the location of worker scripts.
-s = sleigh(launch=sshcmd, scriptDir='/usr/local/lib/R/library/nws/bin')
+# Same as previous, but as user 'frank':
+s <- sleigh(launch=sshcmd, nodeList=c('n1', 'n2'), user='frank')
 }
 }
 
-\keyword{methods}
-\keyword{internal}
+\keyword{utilities}

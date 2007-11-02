@@ -18,6 +18,7 @@
 #
 
 tostr <- function(obj) {
+  rval <- NULL
   tc <- textConnection('rval', open='w')
   sink(tc)
   on.exit({sink(); close(tc)})
@@ -27,11 +28,12 @@ tostr <- function(obj) {
 
 logMsg <- function(..., var) {
   msg <- sub('[[:space:]]+$', '', paste(..., sep='\n'))
-  logMsg <- sprintf('[%s] %s -- %s', date(), SleighName, msg)
   cat(msg, '\n')
   flush.console()
-  nwsStore(SleighNws, var, logMsg)
-  invisible()
+  logmsg <- try(sprintf('[%s] %s -- %s', date(),
+    get('SleighName', globalenv()), msg))
+  nwsStore(get('SleighNws', globalenv()), var, logmsg)
+  invisible(NULL)
 }
 
 logError <- function(...) {
@@ -42,22 +44,51 @@ logDebug <- function(...) {
   logMsg(..., var='logDebug')
 }
 
+importVars <- function(iter, envir=globalenv()) {
+  wsVars <- list()
+  exp <- iter()
+  while (! is.null(exp)) {
+    if (is.null(exp$worker) ||
+        any(get('SleighRank', globalenv()) %in% exp$worker)) {
+      if (is.null(exp$wsVar)) {
+        tryCatch({
+          remove(list=exp$name, envir=envir)
+        }, warning=function(w) {
+        }, error=function(e) {
+          logError(tostr(e))
+        })
+        wsVars[[exp$name]] <- NULL
+      } else {
+        wsVars[[exp$name]] <- exp$wsVar
+      }
+    }
+    exp <- iter()
+  }
+
+  for (i in seq(along.with=wsVars)) {
+    assign(names(wsVars[i]),
+           nwsFind(get('SleighNws', globalenv()), wsVars[[i]]), envir)
+  }
+}
+
 workerLoop <- function(nws, displayName, rank, workerCount, verbose, userNws) {
   bx <- 1
+  lastJob <- -1
+  expiter <- tryCatch(nwsIFindTry(nws, 'exported'), error=function(e) NULL)
 
   # put these into global environment so both worker loop and worker
   # code have access
-  SleighName <<- displayName
-  SleighNws <<- nws
-  SleighUserNws <<- userNws
-  SleighRank <<- rank
-  SleighWorkerCount <<- workerCount
+  assign('SleighName', displayName, globalenv())
+  assign('SleighNws', nws, globalenv())
+  assign('SleighUserNws', userNws, globalenv())
+  assign('SleighRank', rank, globalenv())
+  assign('SleighWorkerCount', workerCount, globalenv())
 
   ## set RNG seed to a pseudo-unique value
   ## FIXME: Use sprng instead!
   setRNGSeed <- function() {
     now <- as.numeric(Sys.time())
-    seedval <- as.integer(SleighRank)
+    seedval <- as.integer(rank)
     set.seed(seedval)
     seedval
   }
@@ -67,21 +98,12 @@ workerLoop <- function(nws, displayName, rank, workerCount, verbose, userNws) {
   # monitoring stuffs
   tasks <- 0
 
-  # post some info about this worker.
-  logfile <- Sys.getenv('RSleighLogFile')
-  names(logfile) <- NULL
-  nwsStore(SleighNws, 'worker info',
-      list(sysInfo=paste(Sys.info()[-3], collapse=" "),
-           version=R.version.string,
-           logfile=logfile,
-           pid=Sys.getpid()))
-
   repeat {
     # update the number of tasks executed
-    nwsStore(SleighNws, SleighName, as.character(tasks))
+    nwsStore(nws, displayName, as.character(tasks))
 
     # wait for a task to execute
-    t <- tryCatch(nwsFetch(SleighNws, 'task'), error=function(e) NULL)
+    t <- tryCatch(nwsFetch(nws, 'task'), error=function(e) NULL)
     if (is.null(t)) {
       logDebug("Shutting down")
       break
@@ -94,7 +116,7 @@ workerLoop <- function(nws, displayName, rank, workerCount, verbose, userNws) {
     }
 
     if (verbose) {
-      logDebug("Task:", tostr(t))
+      logDebug(sprintf("Got task %s", t$tag))
     }
 
     # for testing purposes
@@ -104,13 +126,18 @@ workerLoop <- function(nws, displayName, rank, workerCount, verbose, userNws) {
     }
 
     # send allocation message to the master
-    nwsStore(SleighNws, 'result', list(type='ALLOCATION', tag=t$tag,
-             job=t$job, resubmitted=t$resubmitted, rank=SleighRank))
+    nwsStore(nws, 'result', list(type='ALLOCATION', tag=t$tag,
+             job=t$job, resubmitted=t$resubmitted, rank=rank))
 
     # for testing purposes
     if (identical(t$testing, "postallocation")) {
       cat("testing mode: quiting just after sending allocation message\n")
       quit()
+    }
+
+    if (!is.null(expiter) && t$job != lastJob) {
+      importVars(expiter)
+      lastJob <- t$job
     }
 
     # execute the task
@@ -125,17 +152,17 @@ workerLoop <- function(nws, displayName, rank, workerCount, verbose, userNws) {
     tm <- system.time(value <- lapply(seq(arg), dotask))
 
     if (verbose) {
-      logDebug("Value:", value)
+      logDebug(sprintf("Task %s completed", t$tag))
     }
 
     # send back the task results
-    nwsStore(SleighNws, 'result', list(type='VALUE', value=value, tag=t$tag,
-             job=t$job, resubmitted=t$resubmitted, time=tm, rank=SleighRank))
+    nwsStore(nws, 'result', list(type='VALUE', value=value, tag=t$tag,
+             job=t$job, resubmitted=t$resubmitted, time=tm, rank=rank))
 
     tasks <- tasks + length(arg)
 
     if (t$barrier) {
-      nwsFind(SleighNws, barrierNames[[bx]])
+      nwsFind(nws, barrierNames[[bx]])
       bx <- bx%%2 + 1
     }
 

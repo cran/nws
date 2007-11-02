@@ -1,3 +1,5 @@
+library(grid)
+
 # configurable parameters
 numTasks <- 1000
 numSamples <- 10000
@@ -6,12 +8,8 @@ chunkSize <- 10
 loadFactor <- 3
 workerCount <- 3
 
-# close all graphics devices that exist, and then create devices 2 and 3
-graphics.off()
-get(getOption("device"))(width=7, height=7)
-get(getOption("device"))(width=7, height=2.5)
-
 # randomly generate the mean and sd that describe each stock
+set.seed(472)
 smean <- rnorm(numStocks, mean=10.0, sd=1.0)
 ssd <- rnorm(numStocks, mean=3.0, sd=0.5)
 stocks <- data.frame(mean=smean, sd=ssd)
@@ -32,11 +30,44 @@ fun <- function(numSamples, numStocks) {
 }
 
 # create the plot window
-dev.set(2)
-plot.new()
-plot.window(xlim=c(0.3, 1.3), ylim=c(9.0, 10.6))
-axis(1); axis(2); box()
-title(xlab='Risk', ylab='Reward', main='Parallel Efficient Frontier')
+grid.newpage()
+vplay <- grid.layout(5, 3,
+                     widths = unit(c(3, 1, 2),
+                                   c('lines', 'null', 'lines')),
+                     heights = unit(c(4, 12, 3, 1, 3),
+                                    c('lines', 'null', 'lines', 'null', 'lines')))
+pushViewport(viewport(layout=vplay))
+
+pushViewport(viewport(layout.pos.col=2, layout.pos.row=1, name='titleRegion'))
+grid.text('Parallel Efficient Frontier', gp=gpar(fontsize=20, fontface='bold'))
+
+upViewport()
+pushViewport(viewport(yscale=c(9.0, 10.2), xscale=c(0.3, 1.3),
+  layout.pos.col=2, layout.pos.row=2, name='plotRegion'))
+grid.rect(gp=gpar(fill='light yellow'))
+grid.segments(x0=c(seq(0.1, 0.9, 0.2), rep(0, 5)),
+              y0=c(rep(0.0, 5),        c(1/6, 1/3, 1/2, 2/3, 5/6)),
+              x1=c(seq(0.1, 0.9, 0.2), rep(1, 5)),
+              y1=c(rep(1.0, 5),        c(1/6, 1/3, 1/2, 2/3, 5/6)),
+              gp=gpar(col='gray', lty='dashed'))
+grid.xaxis()
+grid.yaxis()
+
+upViewport()
+pushViewport(viewport(layout.pos.col=2, layout.pos.row=4, name='barRegion'))
+grid.rect(gp=gpar(fill='light yellow'))
+
+seekViewport('barRegion')
+bar <- rectGrob(x = unit(0, 'npc'), width=unit(0, 'npc'),
+                gp=gpar(col='black', fill='red'), hjust=0)
+grid.draw(bar)
+
+upViewport()
+pushViewport(viewport(layout.pos.col=2, layout.pos.row=5, name='subRegion'))
+grid.rect(width=0.9, height=0.9, gp=gpar(col='white', fill='white'))
+text <- textGrob(label=sprintf('Starting to execute %d tasks', numTasks))
+grid.draw(text)
+
 colors <- rainbow(workerCount)
 
 # prepare to process the results returned from eachElem
@@ -53,60 +84,31 @@ accum <- function(valueList) {
   risk[rindx:(rindx + numResults - 1)] <<- results[2,]
   rindx <<- rindx + numResults
   worker = results[3,1]
-  dev.set(2)
-  axis(1); axis(2); box()
-  title(xlab='Risk', ylab='Reward', main='Parallel Efficient Frontier')
-  points(results[2,], results[1,], pch=20, cex=0.5, col=colors[worker])
-  dev.set(3)
+
+  seekViewport('plotRegion')
+  grid.points(results[2,], results[1,], pch=20, gp=gpar(cex=0.5, col=colors[worker]))
+
   tasksCompleted[worker,1] <<- tasksCompleted[worker,1] + numResults
-  if (rindx > numTasks)
-    xlab <- sprintf('Completed all %d Tasks', numTasks)
-  else
-    xlab <- sprintf('Completed %d of %d Tasks', rindx-1, numTasks)
-  barplot(tasksCompleted, xlim=c(0, numTasks), xlab=xlab, horiz=TRUE, col=colors, beside=FALSE)
+  xlab <- if (rindx > numTasks) sprintf('Completed all %d tasks', numTasks)
+    else sprintf('Completed %d of %d tasks', rindx-1, numTasks)
+
+  seekViewport('subRegion')
+  grid.rect(width=0.9, height=0.9, gp=gpar(col='white', fill='white'))
+  text <- editGrob(text, NULL, label=xlab)
+  grid.draw(text)
+
+  seekViewport('barRegion')
+  bar <- editGrob(bar, NULL, width=unit(sum(tasksCompleted)/numTasks, 'npc'))
+  grid.draw(bar)
 }
 
 # do the work in parallel
-library(nws); s <- sleigh(workerCount=workerCount)
-try({library(gtools); setTCPNoDelay(s@nwss@nwsSocket, value=TRUE)}, silent=TRUE)
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
+s <- sleigh(workerCount=workerCount)
 tmp <- eachWorker(s, function(g1) {stocks <<- g1; NULL}, stocks)
 opts <- list(accumulator=accum, chunkSize=chunkSize, loadFactor=loadFactor)
 tmp <- eachElem(s, fun, rep(numSamples, numTasks), numStocks, eo=opts)
-
-# determine the efficient frontier
-o <- order(risk)
-rewardFrontier <- vector()
-rewardFrontier[1] <- maxReward <- reward[o[1]]
-riskFrontier <- vector()
-riskFrontier[1] <- risk[o[1]]
-noriskReward <- rewardFrontier[1] - 2  # XXX ???
-sharpe <- list(max=(reward[o[1]]-noriskReward)/risk[o[1]], i=1)
-i <- j <- 2
-while (j <= length(risk)) {
-  idx <- o[j]
-  t <- reward[idx]
-  if (t > maxReward) {
-    rewardFrontier[i] <- maxReward <- t
-    riskFrontier[i] <- risk[idx]
-
-    tSharpe <- (maxReward - noriskReward) / riskFrontier[i]
-    if (tSharpe > sharpe$max) {
-      sharpe$max <- tSharpe
-      sharpe$i <- i
-    }
-
-    i <- i + 1
-  }
-  j <- j + 1
-}
-
-# plot the efficient frontier
-dev.set(2)
-axis(1); axis(2); box()
-title(xlab='Risk', ylab='Reward', main='Parallel Efficient Frontier')
-points(riskFrontier, rewardFrontier, type='l', col='black')
-lines(c(-10, riskFrontier[sharpe$i], riskFrontier[sharpe$i]),
-      c(rewardFrontier[sharpe$i], rewardFrontier[sharpe$i], 0))
 
 # clean up
 close(s)

@@ -1,4 +1,5 @@
-library(nws)
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
 
 ping <- function (ws, totalTasks) {
   for (i in seq(length.out=totalTasks)) {

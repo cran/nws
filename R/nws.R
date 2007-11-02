@@ -401,8 +401,10 @@ setMethod('nwsDeleteVar', 'netWorkSpace',
                                     nchar(ws), ws,
                                     nchar(xName), xName)), s)
 
-            # status, unused at the moment.
-            bb = nwsRecvN(s, 4)
+            status = as.integer(nwsRecvN(s, 4))
+            if (status != 0) {
+              stop('deleteVar failed')
+            }
           })
 
 # helper function for fetch/find methods.

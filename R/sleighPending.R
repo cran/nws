@@ -107,6 +107,7 @@ setMethod('waitSleigh', 'sleighPending', function(.Object) {
     nwsStore(.Object@nws, .Object@barrierName, 1)
   }
   .Object@sleighState$occupied = FALSE
+  .Object@sleighState$job = .Object@sleighState$job + 1
   .Object@state$done = TRUE
 
   val

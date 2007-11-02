@@ -8,7 +8,9 @@ init <- function() {
 task <- function(y)
   boot(nuke.data, nuke.fun, R=y, m=1, fit.pred=new.fit, x.pred=new.data)
 
-library(nws); s <- sleigh()
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
+s <- sleigh()
 
 R <- 20000
 numChunks <- 200

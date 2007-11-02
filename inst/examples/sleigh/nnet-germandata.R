@@ -5,7 +5,8 @@ init_func <- function(mseed) {
     # Generate list of parameter sets
     library(MASS)
     library(nnet)
-    library(nws)
+    if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+      library(nws)
     data("germandata")
 
     # Need to set random seed before generating folds

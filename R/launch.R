@@ -61,6 +61,20 @@ launch <- function(nwsName, nwsHost, nwsPort, maxWorkerCount=-1,
     nodeList = paste(nodeList, displayName)
   nwsStore(nws, 'nodeList', nodeList)
 
+  # post some info about this worker
+  logfile <- Sys.getenv('RSleighLogFile')
+  names(logfile) <- NULL
+  info <- Sys.info()
+  nwsVersion <- paste(nwsPkgInfo(), collapse=' ')
+  nwsStore(nws, 'worker info',
+      list(host=info[['nodename']],
+           os=info[['sysname']],
+           pid=Sys.getpid(),
+           R=R.version.string,
+           nws=nwsVersion,
+           rank=rank,
+           logfile=logfile))
+
   # wait for all workers to join
   workerCount = nwsFind(nws, 'workerCount')
 

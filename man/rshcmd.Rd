@@ -2,20 +2,53 @@
 \alias{rshcmd}
 \title{Sleigh Auxiliary Function}
 \description{
-This function indicates that RSH will be used to launch sleigh workers. 
+This function is used by the sleigh constructor when starting workers on
+remote nodes using the rsh command.  Note that it doesn't actually start
+any workers directly: it simply returns the program name and arguments
+to start a worker on the specified node.
 }
-\seealso{\code{\link{sleigh}}}
+
+\usage{
+rshcmd(host, options)
+}
+
+\note{
+rshcmd should only be used if ssh is not available, since ssh is a much
+more secure, modern replacement for rsh.
+}
 
 \details{
-This function is only meant to be passed through optional argument 'launch'
-in the sleigh constructor.
+rshcmd currently uses the following options: 'user', 'wrapperDir',
+and 'python'.  The 'user' option is the most useful.
 }
+
+\arguments{
+\item{host}{Name of the worker machine to be started.}
+\item{options}{An environment or list that contains information used to
+construct the command.  See defaultSleighOptions for more information.}
+}
+
+\value{
+A character mode vector, whose first element is the command that will be
+executed to start the worker, and whose subsequent elements are the
+arguments to the command.
+}
+
+\seealso{\code{\link{sshcmd}}, \code{\link{sleigh}}}
 
 \examples{
 \dontrun{
-s = sleigh(launch=rshcmd)
+# Create a sleigh with workers on nodes n1 and n2 started via rsh:
+s <- sleigh(launch=rshcmd, nodeList=c('n1', 'n2'))
+
+# Same as previous, but as user 'frank':
+s <- sleigh(launch=rshcmd, nodeList=c('n1', 'n2'), user='frank')
+
+# Specify an alternate python interpreter and see the command
+# and arguments that rshcmd returns:
+defaultSleighOptions$python <- '/usr/local/bin/python'
+rshcmd('node1', defaultSleighOptions)
 }
 }
 
-\keyword{methods}
-\keyword{internal}
+\keyword{utilities}

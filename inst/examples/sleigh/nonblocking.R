@@ -1,5 +1,6 @@
 # simple program that multiplies value by 2.
-library(nws)
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
 
 worker <- function() {
   repeat {

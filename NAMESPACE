@@ -14,12 +14,15 @@ exportMethods(nwsListWss, nwsMktempWs, nwsOpenWs,
 
 # sleigh class
 exportMethods(eachWorker, eachElem, stopSleigh, rankCount, workerCount,
-              netWorkSpaceObject, status)
+              netWorkSpaceObject, status, export, unexport, workerInfo)
+
+# nwsServer and sleigh classes
+exportMethods(close)
 
 # sleighPending class
 exportMethods(checkSleigh, waitSleigh)
 
-# misc functions
-export(nwsServer, netWorkSpace, close, launch, cmdLaunch, sshcmd, lsfcmd,
+# misc functions, etc
+export(nwsServer, netWorkSpace, launch, cmdLaunch, sshcmd, lsfcmd,
        rshcmd, ccscmd, envcmd, scriptcmd, sleigh, sleighPro, workerLoop,
-       initialize, lsfSleigh, isClosure, defaultSleighOptions)
+       initialize, lsfSleigh, isClosure, defaultSleighOptions, nwsPkgInfo)

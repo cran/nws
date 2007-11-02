@@ -3,7 +3,9 @@ f2 <- function(x, y) { 1 - exp(-1/(x^2+y^2)) }
 f3 <- function(x, y) { sin(x) * cos(y) }
 f4 <- function(x, y) { 0.1 * x * sin(2*y) }
 
-library(nws); s <- sleigh()
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
+s <- sleigh()
 
 if (dev.cur() == 1) get(getOption("device"))(height=10, width=10)
 par(mfcol=c(2,2))

@@ -18,6 +18,8 @@
 # USA
 #
 
+exec > /dev/null 2>&1
+
 RProg=${RProg:-'R'}
 cd ${RSleighWorkingDir:-'/tmp'}
 LogDir=${RSleighLogDir:-'/tmp'}
@@ -36,11 +38,13 @@ $RProg --vanilla --slave <<'EOF' > ${RSleighLogFile} 2>&1 &
 # use RSleighScriptDir to add the directory that contains
 # the nws package to the library path if possible
 # (and without modifying the worker's global environment)
+nwsPkg <- ''
 local({
     scriptDir <- Sys.getenv('RSleighScriptDir')
     if (basename(scriptDir) == 'bin') {
         nwsDir <- dirname(scriptDir)
-        if (basename(nwsDir) == 'nws') {
+        nwsPkg <<- basename(nwsDir)
+        if (nwsPkg %in% c('nws', 'nwsPro')) {
             libDir <- dirname(nwsDir)
             oldPaths <- .libPaths()
             newPaths <- c(libDir, oldPaths)
@@ -50,7 +54,9 @@ local({
     }
 })
 
-library(nws)
+if (nwsPkg == 'nws' || ! suppressWarnings(require(nwsPro, quietly=TRUE)))
+    library(nws)
+rm(nwsPkg)
 cmdLaunch(as.logical(Sys.getenv('RSleighVerbose')))
 EOF
 
@@ -61,11 +67,13 @@ export RCEPid RCEHost
 # sentinel
 $RProg --vanilla --slave <<'EOF' > ${LogDir}/RSleighSentinelLog_${UID}_${RSleighID} 2>&1
 
+nwsPkg <- ''
 local({
     scriptDir <- Sys.getenv('RSleighScriptDir')
     if (basename(scriptDir) == 'bin') {
         nwsDir <- dirname(scriptDir)
-        if (basename(nwsDir) == 'nws') {
+        nwsPkg <<- basename(nwsDir)
+        if (nwsPkg %in% c('nws', 'nwsPro')) {
             libDir <- dirname(nwsDir)
             oldPaths <- .libPaths()
             newPaths <- c(libDir, oldPaths)
@@ -75,7 +83,8 @@ local({
     }
 })
 
-library(nws)
+if (nwsPkg == 'nws' || ! suppressWarnings(require(nwsPro, quietly=TRUE)))
+    library(nws)
 
 cePid <- Sys.getenv('RCEPid')
 ceHost <- Sys.getenv('RCEHost')

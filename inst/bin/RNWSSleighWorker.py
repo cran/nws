@@ -34,6 +34,11 @@ else:
     _TMPDIR = tempfile.gettempdir() or '/tmp'
     _NULFILE = '/dev/null'
 
+# this function is called by the worker process via the preexec_fn parameter
+def setpg():
+    try: os.setpgid(0, 0)
+    except: pass
+
 def main():
     # initialize variables from environment
     modulePath = Env.get('PythonSleighModulePath', '')
@@ -57,11 +62,13 @@ def main():
 # use RSleighScriptDir to add the directory that contains
 # the nws package to the library path if possible
 # (and without modifying the worker's global environment)
+nwsPkg <- ''
 local({
     scriptDir <- Sys.getenv('RSleighScriptDir')
     if (basename(scriptDir) == 'bin') {
         nwsDir <- dirname(scriptDir)
-        if (basename(nwsDir) == 'nws') {
+        nwsPkg <<- basename(nwsDir)
+        if (nwsPkg %%in%% c('nws', 'nwsPro')) {
             libDir <- dirname(nwsDir)
             oldPaths <- .libPaths()
             newPaths <- c(libDir, oldPaths)
@@ -71,7 +78,9 @@ local({
     }
 })
 
-library(nws)
+if (nwsPkg == 'nws' || ! suppressWarnings(require(nwsPro, quietly=TRUE)))
+    library(nws)
+rm(nwsPkg)
 cmdLaunch(%s)
 ''' % verbose
     fd, tmpname = tempfile.mkstemp(suffix='.R', prefix='__nws', text=True)
@@ -82,10 +91,15 @@ cmdLaunch(%s)
     print "executing R worker"
     rprog = Env.get('RProg', 'R')
     argv = [rprog, '--vanilla', '--slave']
-    out = open(outfile or os.path.devnull, 'w')
+    out = open(outfile, 'w')
 
     try:
-        p = subprocess.Popen(argv, stdin=open(tmpname), stdout=out, stderr=out)
+        if sys.platform.startswith('win'):
+            p = subprocess.Popen(argv, stdin=open(tmpname), stdout=out,
+                    stderr=subprocess.STDOUT)
+        else:
+            p = subprocess.Popen(argv, stdin=open(tmpname), stdout=out,
+                    stderr=subprocess.STDOUT, preexec_fn=setpg)
     except OSError, e:
         print >> sys.stderr, 'error executing command:', argv
         if not os.path.exists(rprog):
@@ -96,6 +110,8 @@ cmdLaunch(%s)
         wpid = int(p._handle)  # Windows
     else:
         wpid = p.pid  # Unix
+        try: os.setpgid(wpid, 0)
+        except: pass
 
     print "waiting for shutdown"
     sys.path[1:1] = modulePath.split(os.pathsep)
@@ -189,7 +205,8 @@ def kill(pid):
             except ImportError:
                 print "couldn't import signal module"
                 sig = 15
-            os.kill(pid, sig)
+            try: os.kill(-pid, sig)
+            except: os.kill(pid, sig)
     except OSError:
         # process is already dead, so ignore it
         pass

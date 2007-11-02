@@ -62,7 +62,8 @@ parallel <- TRUE
 if (parallel) {
     # parallel version using sleigh
     cat('starting parallel version\n')
-    library(nws)
+    if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+      library(nws)
 
     # change launch if you add nodeList parameter
     s <- sleigh()

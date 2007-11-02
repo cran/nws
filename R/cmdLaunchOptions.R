@@ -18,7 +18,10 @@
 #
 
 sshcmd <- function(host, options) {
-  basicArgs <- c('ssh', '-f', '-x', '-l', options$user, host)
+  basicArgs <- if (!is.null(options$user))
+                 c('ssh', '-f', '-x', '-l', options$user, host)
+               else
+                 c('ssh', '-f', '-x', host)
 
   wrapper <- file.path(options$wrapperDir, options$workerWrapper)
   if (file.access(wrapper) == 0) {
@@ -38,7 +41,10 @@ sshcmd <- function(host, options) {
 }
 
 rshcmd <- function(host, options) {
-  basicArgs <- c('rsh', host, '-l', options$user, '-n')
+  basicArgs <- if (!is.null(options$user))
+                 c('rsh', host, '-l', options$user, '-n')
+               else
+                 c('rsh', host, '-n')
 
   wrapper <- file.path(options$wrapperDir, 'BackgroundLaunch.py')
   if (!is.null(options$python))

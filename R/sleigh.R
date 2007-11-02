@@ -88,11 +88,12 @@ computeDefaultSleighOptions <- function(pkgpath) {
       workerWrapper = workerWrapper, 
       workingDir = getwd(),
       logDir = NULL,
-      user = Sys.info()[['user']],
+      user = NULL,
       wsNameTemplate = 'sleigh_ride_%04d',
       userWsNameTemplate = 'sleigh_user_%04d',
       verbose = FALSE,
-      rprog = rprog
+      rprog = rprog,
+      python = NULL
       )
 }
 
@@ -144,6 +145,7 @@ function(.Object, ...) {
   .Object@state$launch = opts$launch
   .Object@state$totalTasks = 0
   .Object@state$rankCount = 0
+  .Object@state$job = 0
 
   if (!is.function(opts$launch) &&  !is.character(opts$launch)) {
     stop('unknown launch protocol.')
@@ -170,6 +172,7 @@ function(.Object, ...) {
   nwsDeclare(.Object@nws, 'rankCount', 'single')
   nwsStore(.Object@nws, 'rankCount', 0)
   nwsDeclare(.Object@nws, 'workerCount', 'single')
+  nwsDeclare(.Object@nws, 'exported', 'fifo')
 
   if (is.function(opts$launch)) {
     if (length(opts$nodeList) < 1) {
@@ -213,7 +216,7 @@ function(.Object, ...) {
                         b(opts$workingDir),
                         b(opts$outfile),
                         b(opts$logDir),
-                        b(opts$user))
+                        b(opts$user))   # XXX handle NULL
       if (opts$verbose)
         cat('command:', request, '\n')
 
@@ -429,7 +432,8 @@ function(.Object, fun, ..., eo=NULL, DEBUG=FALSE) {
   nwsStore(.Object@nws, 'totalTasks', as.character(.Object@state$totalTasks))
 
   # submit the tasks
-  lapply(1:wc, storeTask, nws=nws, fun=fun, args=list(list(...)), barrier=TRUE, job=-1)
+  lapply(1:wc, storeTask, nws=nws, fun=fun, args=list(list(...)), barrier=TRUE,
+         job=.Object@state$job)
 
   if (!blocking) {
     .Object@state$occupied = TRUE
@@ -460,6 +464,9 @@ function(.Object, fun, ..., eo=NULL, DEBUG=FALSE) {
   }
 
   nwsStore(.Object@nws, bn, 1)
+
+  # update the job id
+  .Object@state$job = .Object@state$job + 1
 
   val
 })
@@ -658,7 +665,7 @@ function(.Object, fun, elementArgs=list(), fixedArgs=list(), eo=NULL, DEBUG=FALS
 
         if (length(argchunk) > 0) {
           numSubmitted = numSubmitted + 1
-          storeTask(nws, fun, argchunk, tag=tag, barrier=FALSE, job=-1)
+          storeTask(nws, fun, argchunk, tag=tag, barrier=FALSE, job=.Object@state$job)
           tag = tag + length(argchunk)
         }
       }
@@ -700,6 +707,10 @@ function(.Object, fun, elementArgs=list(), fixedArgs=list(), eo=NULL, DEBUG=FALS
   }
 
   if (is.null(accumulator)) length(val) = currentTasks
+
+  # update the job id
+  .Object@state$job = .Object@state$job + 1
+
   val
 })
 
@@ -712,3 +723,96 @@ setMethod('workerCount', 'sleigh', function(.Object) .Object@state$workerCount)
 
 setGeneric('netWorkSpaceObject', function(.Object) standardGeneric('netWorkSpaceObject'))
 setMethod('netWorkSpaceObject', 'sleigh', function(.Object) .Object@nws)
+
+wsVarName <- function(name, worker) {
+  if (is.null(worker)) {
+    sprintf('env_%s', name)
+  } else {
+    sprintf('env_%d_%s', worker, name)
+  }
+}
+
+setGeneric('export',
+           function(.Object, xName, xVal, worker=NULL) standardGeneric('export'))
+setMethod('export', 'sleigh',
+function(.Object, xName, xVal, worker=NULL) {
+  # sleigh error checking
+  if (.Object@state$occupied) stop('Sleigh is occupied')
+  if (.Object@state$stopped) stop('Sleigh is stopped')
+
+  # argument error checking
+  if (missing(xName)) stop('no value specified for xName argument')
+  if (missing(xVal)) stop('no value specified for xVal argument')
+  if (! is.character(xName)) stop('xName must be a character variable')
+  if (! is.null(worker)) {
+    if (! is.numeric(worker)) stop('worker value must be numeric')
+    if (length(worker) > 1) stop('only one worker can be specified')
+    if (worker < 0) stop('worker value must be positive')
+    if (worker >= .Object@state$workerCount)
+      stop('worker value is too large for this sleigh')
+  }
+
+  wsVar <- wsVarName(xName, worker)
+  nwsDeclare(.Object@nws, wsVar, 'single')
+  nwsStore(.Object@nws, wsVar, xVal)
+  nwsStore(.Object@nws, 'exported', list(worker=worker, name=xName, wsVar=wsVar))
+  invisible(NULL)
+})
+
+setGeneric('unexport',
+           function(.Object, xName, worker=NULL) standardGeneric('unexport'))
+setMethod('unexport', 'sleigh',
+function(.Object, xName, worker=NULL) {
+  # sleigh error checking
+  if (.Object@state$occupied) stop('Sleigh is occupied')
+  if (.Object@state$stopped) stop('Sleigh is stopped')
+
+  # argument error checking
+  if (missing(xName)) stop('no value specified for xName argument')
+  if (! is.character(xName)) stop('xName must be a character variable')
+  if (! is.null(worker)) {
+    if (! is.numeric(worker)) stop('worker value must be numeric')
+    if (length(worker) > 1) stop('only one worker can be specified')
+    if (worker < 0) stop('worker value must be positive')
+    if (worker >= .Object@state$workerCount) stop('worker value is too large')
+  }
+
+  wsVar <- wsVarName(xName, worker)
+  tryCatch({
+    nwsDeleteVar(.Object@nws, wsVar)
+  }, error=function(e) {
+    stop('cannot unexport a variable that was not exported: ', wsVar)
+  })
+  nwsStore(.Object@nws, 'exported', list(worker=worker, name=xName, wsVar=NULL))
+  invisible(NULL)
+})
+
+setGeneric('workerInfo',
+           function(.Object) standardGeneric('workerInfo'))
+setMethod('workerInfo', 'sleigh',
+function(.Object) {
+  n <- .Object@state$workerCount
+  host <- as.character(rep(NA, n))
+  os <- as.character(rep(NA, n))
+  pid <- as.integer(rep(NA, n))
+  R <- as.character(rep(NA, n))
+  nws <- as.character(rep(NA, n))
+  rank <- as.integer(rep(NA, n))
+  logfile <- as.character(rep(NA, n))
+
+  it <- nwsIFindTry(.Object@nws, 'worker info')
+  x <- it()
+  while (! is.null(x)) {
+    i <- as.integer(x$rank) + 1
+    host[i] <- x$host
+    os[i] <- x$os
+    pid[i] <- as.integer(x$pid)
+    R[i] <- x$R
+    nws[i] <- x$nws
+    rank[i] <- as.integer(x$rank)
+    logfile[i] <- x$logfile
+    x <- it()
+  }
+  data.frame(host=host, os=os, pid=pid, R=R, nws=nws,
+             rank=rank, logfile=logfile, stringsAsFactors=FALSE)
+})

@@ -2,7 +2,9 @@
 # that return a friendly greeting
 
 # initialize
-library(nws); s = sleigh()
+if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
+  library(nws)
+s = sleigh()
 ntasks = 10
 
 # define the worker function
