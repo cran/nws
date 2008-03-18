@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
-import os, subprocess
+import os, sys, subprocess
 from nws.client import NwsServer
+
+if not os.environ.get('DISPLAY'):
+    print >> sys.stderr, 'error: X11 is required.  DISPLAY environment variable not set'
+    sys.exit(1)
 
 # create a unique workspace to synchronize with the contestants
 # and put its name in the environment

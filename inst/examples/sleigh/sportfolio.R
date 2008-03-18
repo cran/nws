@@ -30,12 +30,20 @@ fun <- function(numSamples, numStocks) {
 # create the plot window
 grid.newpage()
 vplay <- grid.layout(5, 3,
-                     widths = unit(c(3, 1, 2),
+                     widths = unit(c(4, 1, 2),
                                    c('lines', 'null', 'lines')),
-                     heights = unit(c(4, 12, 3, 1, 3),
+                     heights = unit(c(4, 12, 4, 1, 3),
                                     c('lines', 'null', 'lines', 'null', 'lines')))
 pushViewport(viewport(layout=vplay))
 
+pushViewport(viewport(layout.pos.col=1, layout.pos.row=2))
+grid.text('Reward', x=unit(1, 'lines'), rot=90)
+
+upViewport()
+pushViewport(viewport(layout.pos.col=2, layout.pos.row=3))
+grid.text('Risk', y=unit(1, 'lines'))
+
+upViewport()
 pushViewport(viewport(layout.pos.col=2, layout.pos.row=1, name='titleRegion'))
 grid.text('Sequential Efficient Frontier', gp=gpar(fontsize=20, fontface='bold'))
 
@@ -43,10 +51,10 @@ upViewport()
 pushViewport(viewport(yscale=c(9.0, 10.2), xscale=c(0.3, 1.3),
   layout.pos.col=2, layout.pos.row=2, name='plotRegion'))
 grid.rect(gp=gpar(fill='light yellow'))
-grid.segments(x0=c(seq(0.1, 0.9, 0.2), rep(0, 5)),
-              y0=c(rep(0.0, 5),        c(1/6, 1/3, 1/2, 2/3, 5/6)),
-              x1=c(seq(0.1, 0.9, 0.2), rep(1, 5)),
-              y1=c(rep(1.0, 5),        c(1/6, 1/3, 1/2, 2/3, 5/6)),
+grid.segments(x0=unit(c(seq(0.4, by=0.2, length=5), rep(0.3, 5)), 'native'),
+              y0=unit(c(rep(9.0, 5), seq(9.2, by=0.2, length=5)), 'native'),
+              x1=unit(c(seq(0.4, by=0.2, length=5), rep(1.3, 5)), 'native'),
+              y1=unit(c(rep(10.2, 5), seq(9.2, by=0.2, length=5)), 'native'),
               gp=gpar(col='gray', lty='dashed'))
 grid.xaxis()
 grid.yaxis()
@@ -97,3 +105,23 @@ while (rindx <= numTasks) {
   bar <- editGrob(bar, NULL, width=unit((rindx-1)/numTasks, 'npc'))
   grid.draw(bar)
 }
+
+# compute the efficient frontier
+indx <- chull(risk, reward)
+x <- risk[indx]
+ix <- which.min(x)
+y <- reward[indx]
+iy <- which.max(y)
+if (ix < iy) {
+  i <- ix:iy
+  x <- x[i]
+  y <- y[i]
+} else {
+  i <- ix:(iy+length(indx))
+  x <- c(x, x)[i]
+  y <- c(y, y)[i]
+}
+
+seekViewport('plotRegion')
+grid.points(x, y, gp=gpar(col='black'))
+grid.lines(x=unit(x, 'native'), y=unit(y, 'native'), gp=gpar(col='black'))

@@ -23,6 +23,6 @@ exportMethods(close)
 exportMethods(checkSleigh, waitSleigh)
 
 # misc functions, etc
-export(nwsServer, netWorkSpace, launch, cmdLaunch, sshcmd, lsfcmd,
-       rshcmd, ccscmd, envcmd, scriptcmd, sleigh, sleighPro, workerLoop,
+export(nwsServer, netWorkSpace, launch, cmdLaunch, sshcmd, sshforwardcmd,
+       lsfcmd, rshcmd, ccscmd, envcmd, scriptcmd, sleigh, sleighPro, workerLoop,
        initialize, lsfSleigh, isClosure, defaultSleighOptions, nwsPkgInfo)

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2008, REvolution Computing, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -18,6 +18,7 @@
 #
 
 library(nws)
+library(lattice)
 
 quote_plus <- function(x) {
   x <- gsub(';', '%3B', x, fixed=TRUE)
@@ -45,43 +46,41 @@ monitor <- function(ws, filename) {
   nodelist <- nwsFind(ws, 'nodeList')
   nodes <- unlist(strsplit(nodelist, " "))
   tasks <- unlist(lapply(nodes, function(n) as.integer(nwsFind(ws, n))))
-  tasks <- c(sum(tasks), tasks)
-  labels <- c('Total', sub('localhost@', '', nodes))
-  totalTasks <- max(as.integer(nwsFind(ws, 'totalTasks')), tasks[1])
+  labels <- sub('localhost@', '', nodes)
+  sumTasks <- sum(tasks)
+  totalTasks <- max(as.integer(nwsFind(ws, 'totalTasks')), sumTasks)
   xlim <- c(0, max(totalTasks, 1))
   main <- nwsFindTry(ws, 'MainTitle', 'Sleigh Monitor')
-  sub <- paste('Completed', tasks[1], 'of', totalTasks, 'Tasks')
+  sub <- paste('Completed', sumTasks, 'of', totalTasks, 'Tasks')
   sub <- nwsFindTry(ws, 'SubTitle', sub)
 
-  if (length(tasks) > 20) {
-    tasks <- tasks[1:20]
-    labels <- labels[1:20]
-  }
-  ntasks <- length(tasks)
-  col <- rainbow(ntasks)
-
-  if (ntasks < 4) {
-    h <- 7
-    labels <- abbreviate(labels, 11)
-  } else if (ntasks < 7) {
-    h <- 8
-    labels <- abbreviate(labels, 9)
-  } else if (ntasks < 12) {
-    h <- 9
-    labels <- abbreviate(labels, 6)
-  } else {
-    h <- 11
-    labels <- abbreviate(labels, 3)
-  }
+  h <- 8  # XXX ?
   res <- 72
   pixels <- res * h
 
   tryCatch(png(filename=filename, height=pixels, width=576, pointsize=12),
            error=function(e) bitmap(file=filename, height=h, width=8, res=res, pointsize=12))
 
-  barplot(tasks, horiz=TRUE, names.arg=labels, main=main, sub=sub,
-          xlab='Tasks Executed', ylab='Workers',
-          xlim=xlim, legend.text=as.character(tasks), col=col)
+  x <- barchart(labels~tasks,
+                horizontal=TRUE,
+                xlab='Tasks Executed',
+                ylab='Workers',
+                xlim=xlim,
+                col=rainbow(length(labels)),
+                main=main)
+
+  total <- 'Total'
+  y <- barchart(total~sumTasks,
+                horizontal=TRUE,
+                xlab=NULL,
+                ylab=NULL,
+                xlim=xlim,
+                scales=list(draw=FALSE),
+                col='red',
+                sub=sub)
+
+  print(x, position=c(0,0.1,1,1), more=TRUE)
+  print(y, position=c(0,0,1,0.15))
 
   dev.off()
 }

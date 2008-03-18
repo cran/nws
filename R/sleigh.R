@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2008, REvolution Computing, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -76,7 +76,9 @@ computeDefaultSleighOptions <- function(pkgpath) {
 
   list(
       nwsHost = nwsHost,
+      nwsHostRemote = NULL,
       nwsPort = nwsPort,
+      nwsPortRemote = nwsPort,
       outfile = NULL,
       launch = 'local',
       workerCount = 3,

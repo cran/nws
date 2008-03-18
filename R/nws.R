@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2008, REvolution Computing, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -528,7 +528,7 @@ setMethod('nwsFindFile', 'netWorkSpace',
 
 setMethod('nwsFindTryFile', 'netWorkSpace',
           function(.Object, xName, fObj) {
-            trycatch(nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
+            tryCatch(nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
                                      .Object@wsName, xName, 'findTry', fObj),
                      error=function(e) FALSE)
           })

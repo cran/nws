@@ -1,5 +1,6 @@
 \name{sshcmd}
 \alias{sshcmd}
+\alias{sshforwardcmd}
 \title{Sleigh Auxiliary Function}
 \description{
 This function is used by the sleigh constructor when starting workers on
@@ -10,11 +11,12 @@ to start a worker on the specified node.
 
 \usage{
 sshcmd(host, options)
+sshforwardcmd(host, options)
 }
 
 \note{
-sshcmd is not intended to be called by the user.
-It is called by the sleigh constructor when specified via the
+sshcmd and sshforwardcmd are not intended to be called directly by the user.
+They are called by the sleigh constructor when specified via the
 sleigh launch argument.  You may want to execute it when debugging
 your sleigh option settings, but that can also be accomplished by
 setting the sleigh verbose argument to TRUE.
@@ -23,6 +25,15 @@ setting the sleigh verbose argument to TRUE.
 \details{
 sshcmd currently uses the following options: 'user', 'wrapperDir',
 'workerWrapper', and 'python'.  The 'user' option is the most useful.
+
+sshforward works like sshcmd, but it makes use of the ssh -R
+argument to tunnel the nws server connection back to the master
+machine.  It uses the options 'nwsHostRemote' and 'nwsPortRemote'
+to determine what bind address and port should be forwarded back to
+the master machine.
+
+Note that when using sshforwardcmd, you must specify a different value
+of 'nwsHostRemote', usually 'localhost'.
 }
 
 \arguments{
@@ -46,6 +57,16 @@ s <- sleigh(launch=sshcmd, nodeList=c('n1', 'n2'))
 
 # Same as previous, but as user 'frank':
 s <- sleigh(launch=sshcmd, nodeList=c('n1', 'n2'), user='frank')
+
+# Create two tunnels from workers n1 and n2 back the nws server
+# on the local machine:
+s <- sleigh(launch=sshforwardcmd, nodeList=c('n1', 'n2'),
+            nwsHostRemote='localhost')
+
+# Same as the previous example, but use port 9876 in case either
+# worker machine already has an nws server bound to port 8765:
+s <- sleigh(launch=sshforwardcmd, nodeList=c('n1', 'n2'),
+            nwsHostRemote='localhost', nwsPortRemote=9876)
 }
 }
 

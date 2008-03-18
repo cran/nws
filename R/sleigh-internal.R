@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2008, REvolution Computing, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -44,6 +44,12 @@ addWorker <- function(machine, wsName, userWsName, id, workerCount, options) {
   # basic idea is (or should be): if we can get the appropriate
   # worker script running on the remote node, we just need to
   # give it enough env info to take care of the rest
+  nwsHost = if (is.null(options$nwsHostRemote))
+              options$nwsHost
+            else if (options$nwsHostRemote == '')
+              'localhost'
+            else 
+              options$nwsHostRemote
 
   envVars = list(
     paste('RSleighName=', machine, sep=''),
@@ -52,8 +58,8 @@ addWorker <- function(machine, wsName, userWsName, id, workerCount, options) {
     paste('RSleighID=', id, sep=''),
     paste('RSleighWorkerCount=', workerCount, sep=''),
     paste('RSleighScriptDir=', options$scriptDir, sep=''),
-    paste('RSleighNwsHost=', options$nwsHost, sep=''),
-    paste('RSleighNwsPort=', options$nwsPort, sep=''),
+    paste('RSleighNwsHost=', nwsHost, sep=''),
+    paste('RSleighNwsPort=', options$nwsPortRemote, sep=''),
     paste('RSleighWorkingDir=', options$workingDir, sep=''),
     paste('RProg=', options$rprog, sep='')
   )

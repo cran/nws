@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2007, Scientific Computing Associates, Inc.
+# Copyright (c) 2005-2008, REvolution Computing, Inc.
 #
 # NetWorkSpaces is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -22,6 +22,39 @@ sshcmd <- function(host, options) {
                  c('ssh', '-f', '-x', '-l', options$user, host)
                else
                  c('ssh', '-f', '-x', host)
+
+  wrapper <- file.path(options$wrapperDir, options$workerWrapper)
+  if (file.access(wrapper) == 0) {
+    if (identical(grep('\\.py$', wrapper, ignore.case=TRUE), as.integer(1))) {
+      if (!is.null(options$python))
+        c(options$python, wrapper, basicArgs)
+      else
+        c('python', wrapper, basicArgs)
+    }
+    else {
+      c(wrapper, basicArgs)
+    }
+  }
+  else {
+    basicArgs
+  }
+}
+
+sshforwardcmd <- function(host, options) {
+  if (is.null(options$nwsHostRemote))
+    stop('must use the nwsHostRemote option with sshforwardcmd')
+
+  r <- if (nchar(options$nwsHostRemote) > 0)
+         sprintf('%s:%d:%s:%d', options$nwsHostRemote, options$nwsPortRemote,
+                 options$nwsHost, options$nwsPort)
+       else
+         sprintf('%d:%s:%d', options$nwsPortRemote,
+                 options$nwsHost, options$nwsPort)
+
+  basicArgs <- if (!is.null(options$user))
+                 c('ssh', '-f', '-x', '-R', r, '-l', options$user, host)
+               else
+                 c('ssh', '-f', '-x', '-R', r, host)
 
   wrapper <- file.path(options$wrapperDir, options$workerWrapper)
   if (file.access(wrapper) == 0) {
