@@ -3,9 +3,9 @@
 \alias{nwsStore}
 \alias{nwsStore-methods}
 \alias{nwsStore,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Associate a Value with a Variable in netWorkSpace}
 \description{
-Store value associates with a variable to the shared netWorkSpace.
+Store value associated with a variable in the shared netWorkSpace.
 }
 
 \usage{
@@ -13,22 +13,23 @@ Store value associates with a variable to the shared netWorkSpace.
 }
 
 \arguments{
-\item{.Object}{a netWorkSpace class object}
-\item{xName}{name of the variable to be stored}
-\item{xVal}{value to be stored}
+\item{.Object}{a netWorkSpace class object.}
+\item{xName}{character string to be used as the name of the stored variable.}
+\item{xVal}{value to be stored.}
 }
 
 
 \details{
-nwsStore associates the value xVal with the variable xName in the
-shared netWorkSpace corresponding to .Object, thereby making the
+The \code{nwsStore} method associates the value \code{xVal} with the 
+variable \code{xName} in the
+shared netWorkSpace \code{.Object}, thereby making the
 value available to all the distributed R processes.  If a mode
-has not already been set for xName, 'fifo' will be used (see
+has not already been set for \code{xName}, \code{'fifo'} will be used (see
 \code{\link{nwsDeclare}}).
 
-Note that, by default ('fifo' mode), nwsStore is not idempotent: repeating 
-nwsStore (nws, xName, xVal) will add additional values to the set of
-values associated with the variable named xName. See the examples
+Note that, by default (\code{'fifo'} mode), \code{nwsStore} is not idempotent: 
+repeating \code{nwsStore (nws, xName, xVal)} will add additional values to the 
+set of values associated with the variable named \code{xName}. See the examples
 below for details.
 }
 

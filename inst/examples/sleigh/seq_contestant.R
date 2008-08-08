@@ -1,5 +1,4 @@
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 library(grid)
 options(device='X11')
 grid.newpage()

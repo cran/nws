@@ -25,8 +25,7 @@ comp_func <- function(...) {
 
 if (TRUE) {
   cat('Parallel version\n')
-  if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-    library(nws)
+  library(nws)
   s <- sleigh(workerCount=3)
   eachWorker(s, init_func)
   eo = list(chunkSize = 200)

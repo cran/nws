@@ -44,13 +44,13 @@
   commonly used with \code{eachWorker}, but is included for consistency.
   The first argument to \code{eo$accumulator} function is a list of
   results, where the length of the list is always equal to 1 (because
-  there is no \code{eo$chunkSize} option in eachWorker).  The second
+  there is no \code{eo$chunkSize} option in \code{eachWorker}).  The second
   argument is a vector of task numbers, starting from 1, where the
   length of the vector is also always equal to 1.  The task numbers are
   not very important when used with \code{eachWorker}, because the order
   of tasks isn't specified, as it is with \code{eachElem}.  Note that
   when \code{eo$accumulator} is specified, \code{eachWorker} returns
-  NULL, not the list of results, since \code{eachWorker} doesn't save
+  \code{NULL}, not the list of results, since \code{eachWorker} doesn't save
   any of the results after passing them to the \code{eo$accumulator}
   function.
 

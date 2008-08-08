@@ -3,7 +3,7 @@
 \alias{nwsClose}
 \alias{nwsClose-methods}
 \alias{nwsClose,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Close a netWorkSpace}
 \description{
 Close connection of a shared netWorkSpace to the netWorkSpace server.
 }

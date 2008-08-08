@@ -3,13 +3,16 @@
 \alias{nwsServer-class}
 \alias{nwsServer}
 \alias{initialize,nwsServer-method}
-\title{Class ``nwsServer"}
+\title{Class Representing NetWorkSpaces Server}
 \description{Class representing nwsServer.}
 \section{Objects from the Class}{
-Objects can be created by calls of the form \code{new("nwsServer", serverHost, port)}.
+Objects can be created by calls of the form \cr
+\code{nwsServer(serverHost, port)}\cr
+or\cr
+\code{new("nwsServer", serverHost, port)}.
 \describe{
-   \item serverHost: server host name. Default value is local machine.
-   \item port: server port number. Default value is 8765.
+   \item{\code{serverHost}:}{server host name. Default value is \code{"localhost"}.}
+   \item{\code{port}:}{server port number. Default value is \code{8765}.}
 }
 }
 \section{Slots}{

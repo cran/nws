@@ -2,17 +2,17 @@
 \alias{scriptcmd}
 \title{Sleigh Auxiliary Function}
 \description{
-This function is set through optional argument 'scriptExec' in the sleigh
-constructor. It uses Python to execute worker script. 
+This function is set through optional argument \code{scriptExec} in the sleigh
+constructor. It uses Python to execute a worker script. 
 }
 
 \details{
 This function indicates that configuration variables 
-such as RSleighName and RSleighNwsName are passed as part of 
-the worker script arguments rather than through env command. 
-This is often useful on systems that do not support env command.
+such as \code{RSleighName} and \code{RSleighNwsName} are passed as part of 
+the worker script arguments rather than through the \code{env} command. 
+This is often useful on systems that do not support the \code{env} command.
 
-scriptcmd is the default choice to execute worker scripts on Windows.
+\code{scriptcmd} is the default choice to execute worker scripts on Windows.
 }
 
 \examples{

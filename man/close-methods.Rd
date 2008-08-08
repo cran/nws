@@ -5,13 +5,12 @@
 \alias{close,ANY-method}
 \alias{close,sleigh-method}
 \alias{close,nwsServer-method}
-\title{nwsServer, sleigh Class Method}
+\title{Close a Sleigh or netWorkSpace}
 \description{
-Depends on the first argument type passed to the close function,
-it behaves differently.
-If the first argument is a sleigh object, then close function calls stopSleigh
-to shutdown the sleigh workers and delete the sleigh workspace. 
-If the first argument is a nwsServer object, then the connection to the
+If the first argument is a \code{sleigh} object, then \code{close} calls 
+\code{stopSleigh} to shut down the sleigh workers and delete the sleigh 
+workspace. 
+If the first argument is a \code{nwsServer} object, then the connection to the
 netWorkSpace server is closed.
 }
 
@@ -21,13 +20,14 @@ netWorkSpace server is closed.
 }
 
 \arguments{
-\item{con}{a sleigh class object or a nwsServer class object}
+\item{con}{an object of class \code{sleigh} or \code{nwsServer}.}
 \item{...}{optional fields}
 }
 
 \details{
-The optional fields are not passed to stopSleigh method. 
-They are defined to be compatible with the default, non-generic close method.
+The optional arguments are not passed to \code{stopSleigh} method. 
+They are defined to be compatible with the default, non-generic 
+\code{close} method.
 }
 
 \examples{

@@ -145,3 +145,17 @@ nws 1.6.3
 4. Fixed bug in nwsFindTryFile.
 5. Added sshforwardcmd function for tunneling the sleigh workers'
    connections to the nws server through ssh.
+
+nws 1.7.x.0
+-----------
+1. The "Pro" version of nws is renamed back to nws.
+2. Fixed bug in the "File" methods (nwsFetchFile, etc).
+3. Fixed some potential bugs when storing and fetching binary data.
+4. Added new functions batchNodeList, sgeNodeList, lsfNodeList, and
+   pbsNodeList to provide better support for running sleigh programs
+   as batch jobs under SGE, LSF, and PBS.
+5. Modified the nws store operations to not serialize raw vectors.
+   In this respect, they are treated like strings, but are distinguished
+   from strings.
+6. Enhanced babelfish support.
+7. Added "rwin" function for launching remote sleigh workers on Windows.

@@ -3,13 +3,9 @@
 \alias{status}
 \alias{status-methods}
 \alias{status,sleigh-method}
-\title{sleigh Class Method}
+\title{Check Status of Sleigh Workers}
 \description{
-  Check status of sleigh workers and return a list that contains two
-  values: numWorkers and closed.
-  If status is zero, then some workers failed to start.
-  If status is one, then either all workers have started or 
-  closeGroup is set to TRUE. numWorkers indicates the number of workers started. 
+  Check status of sleigh workers. 
 }
 
 \usage{
@@ -18,19 +14,26 @@
 
 \arguments{
   \item{.Object}{a sleigh class object}
-  \item{closeGroup}{a boolean value indicating whether to close the
+  \item{closeGroup}{a logical value indicating whether to close the
     worker group}
   \item{timeout}{timeout value measure in seconds}
 }
 
+\value{a list that contains two values: 
+\item{numWorkers}{the number of workers started} 
+\item{closed}{If \code{closed} is zero, then some workers failed to start.
+  If \code{closed} is one, then either all workers have started or
+  \code{closeGroup} is set to TRUE.} 
+}
 \details{
-closeGroup is set to FALSE by default. If closeGroup is set to FALSE,
-then all workers must wait for each other to start before they can start
-working on tasks. If closeGroup is set to TRUE, no new workers may
-join the group after timeout value has expired. Once the group is closed,
-all launched workers can start working on tasks. 
+The argument \code{closeGroup} is set to \code{FALSE} by default. If 
+\code{closeGroup} is set to \code{FALSE},
+then all workers must wait for the others to start before they can start
+working on tasks. If \code{closeGroup} is set to \code{TRUE}, no new 
+workers may join the group after the timeout value has expired. Once the 
+group is closed, all launched workers can start working on tasks. 
  
-timeout indicates how long to wait and check on the status
+The \code{timeout} argument indicates how long to wait and check on the status
 of workers.
 }
 

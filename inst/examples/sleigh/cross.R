@@ -1,5 +1,4 @@
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 
 as.charlist <- function(s) {
   x <- strsplit(s, " +", extended=TRUE)[[1]]

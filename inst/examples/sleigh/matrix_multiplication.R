@@ -1,8 +1,7 @@
 # matrix multiplication
 # each worker computes one block column of the result matrix
 
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 
 as.charlist <- function(s) {
   x <- strsplit(s, " +", extended=TRUE)[[1]]

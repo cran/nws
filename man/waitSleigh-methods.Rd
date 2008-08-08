@@ -3,10 +3,11 @@
 \alias{waitSleigh}
 \alias{waitSleigh-methods}
 \alias{waitSleigh,sleighPending-method}
-\title{sleighPending Class Method}
+\title{Wait for Results from Sleigh}
 \description{
-Wait and block for the results to be generated for the pending sleigh job, .Object. 
-If the job has completed, then waitSleigh returns immediately with the generated results.
+Wait and block for the results to be generated for the pending sleigh job. 
+If the job has completed, then \code{waitSleigh} returns immediately with 
+the generated results.
 }
 
 \usage{
@@ -14,18 +15,20 @@ If the job has completed, then waitSleigh returns immediately with the generated
 }
 
 \arguments{
-\item{.Object}{a sleighPending class object}
+\item{.Object}{a \code{sleighPending} class object}
 }
 
 \details{
-The sleighPending class object, .Object, is usually obtained from the return value of 
-non-blocking eachElem or non-blocking eachWorker. 
+The \code{sleighPending} class object, \code{.Object}, is usually obtained 
+from the return value of non-blocking \code{eachElem} or non-blocking 
+\code{eachWorker}. 
 }
 \seealso{ \code{\link{eachWorker}}, \code{\link{eachElem}} }
 
 
 \examples{
 \dontrun{
+s = sleigh()
 eo = list(blocking=0)
 sp = eachWorker(s, function() {Sys.sleep(100)}, eo=eo) 
 waitSleigh(sp)  # wait on workers. Each worker sleeps for 100 seconds

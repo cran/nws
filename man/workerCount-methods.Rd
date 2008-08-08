@@ -3,7 +3,7 @@
 \alias{workerCount-methods}
 \alias{workerCount,sleigh-method}
 \alias{workerCount}
-\title{sleigh Class Method}
+\title{Find the Number of Workers in a Sleigh}
 \description{
 Return number of Sleigh workers that have successfully started.
 }

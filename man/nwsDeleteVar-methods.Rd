@@ -3,7 +3,7 @@
 \alias{nwsDeleteVar}
 \alias{nwsDeleteVar-methods}
 \alias{nwsDeleteVar,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Delete a Variable from a netWorkSpace}
 \description{
 Delete a variable from the shared netWorkSpace.
 }
@@ -13,8 +13,8 @@ Delete a variable from the shared netWorkSpace.
 }
 
 \arguments{
-  \item{.Object}{a netWorkSpace class object}
-  \item{xName}{name of the variable to be deleted}
+  \item{.Object}{a netWorkSpace class object.}
+  \item{xName}{character string specifying the name of the variable to be deleted.}
 }
 
 \examples{

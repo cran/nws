@@ -20,8 +20,8 @@
 import sys, os, threading, time, tempfile, glob
 import win32serviceutil, win32service, win32event, win32process, win32api
 import win32file, pywintypes, win32security, win32con
-from nws.client import NetWorkSpace, NwsServerException, NwsOperationException, FIFO
-from nws.util import msc_argv2str, which
+from nwsclient import NetWorkSpace, NwsServerException, NwsOperationException, FIFO
+from nwsutil import msc_argv2str, which
 
 _DEBUG = 1
 
@@ -81,6 +81,9 @@ class RSleighService(win32serviceutil.ServiceFramework):
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
+        import servicemanager
+        self.sm = servicemanager
+        self._info('service args: %s' % (args,))
         self._args = args
         self.user = win32api.GetUserName()
         self._shutdownRequested = win32event.CreateEvent(None, 0, 0, None)
@@ -130,6 +133,9 @@ class RSleighService(win32serviceutil.ServiceFramework):
 
     # called by the RequestWatcher
     def GotRequest(self, request):
+        if _DEBUG:
+            self._info('Got request: %s' % (request,))
+
         self._lock.acquire()
         try:
             self._requests.append(request)
@@ -152,6 +158,9 @@ class RSleighService(win32serviceutil.ServiceFramework):
         finally:
             self._lock.release()
 
+        if _DEBUG:
+            self._info('Getting request: %s' % (r,))
+
         return r
 
     # called by the Sentinel
@@ -166,8 +175,6 @@ class RSleighService(win32serviceutil.ServiceFramework):
         win32event.SetEvent(self._shutdownRequested)
 
     def SvcDoRun(self):
-        import servicemanager
-        self.sm = servicemanager
         self.sm.LogMsg(self.sm.EVENTLOG_INFORMATION_TYPE,
                 self.sm.PYS_SERVICE_STARTED, (self._svc_name_, ''))
 
@@ -220,6 +227,7 @@ class RSleighService(win32serviceutil.ServiceFramework):
                         outfile = os.path.join(logDir, os.path.split(outfile)[1])
                     else:
                         outfile = _NULFILE
+                    request['RSleighLogFile'] = outfile
                     verbose = request.has_key('RSleighWorkerOut') and 'TRUE' or 'FALSE'
                     nwsName = request['RSleighNwsName']
                     nwsHost = request.get('RSleighNwsHost', 'localhost')
@@ -426,7 +434,8 @@ class RequestWatcher(threading.Thread):
                             x = s[1:].split(s[0])
                             r = {'RSleighNwsHost': self.nwsHost,
                                  'RSleighNwsPort': str(self.nwsPort)}
-                            r['RSleighNwsName'], r['RSleighWorkerCount'], \
+                            r['RSleighNwsName'], r['RSleighUserNwsName'], \
+                                r['RSleighWorkerCount'], \
                                 r['RSleighID'], r['RSleighWorkingDir'], \
                                 r['RSleighWorkerOut'], r['RSleighLogDir'], \
                                 r['RSleighUserName'] = x

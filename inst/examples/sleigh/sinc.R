@@ -1,7 +1,6 @@
 x <- seq(-10, 10, length=200)
 f <- function(x, y) { r <- sqrt(x^2+y^2); 10 * sin(r)/r }
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 z <- unlist(eachElem(s, f, expand.grid(x=x, y=x), eo=list(chunkSize=200)))
 dim(z) <- c(length(x), length(x))

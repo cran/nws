@@ -3,7 +3,7 @@
 \alias{nwsIFindTry}
 \alias{nwsIFindTry-methods}
 \alias{nwsIFindTry,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Iterate Through Stored Values of a netWorkSpace Variable}
 \description{
 Create a function that acts as a non-destructive iterator over the
 values of the specified variable.
@@ -14,16 +14,16 @@ values of the specified variable.
 }
 
 \arguments{
-\item{.Object}{a netWorkSpace class object}
-\item{xName}{name of the variable to be fetched}
-\item{defaultVal}{value to return, if xName is not found in the netWorkSpace}
+\item{.Object}{a netWorkSpace class object.}
+\item{xName}{character string specifying the name of the variable to be fetched.}
+\item{defaultVal}{value to return if \code{xName} is not found in the netWorkSpace.}
 }
 
 \details{
-The iterator function returned by the nwsIFindTry method takes
-no arguments, and works somewhat like the nwsFindTry method, specified
-with the same arguments that were passed to nwsIFindTry.
-The difference is that the nwsFindTry method cannot iterate through the
+The iterator function returned by the \code{nwsIFindTry} method takes
+no arguments, and works somewhat like the \code{nwsFindTry} method, specified
+with the same arguments that were passed to \code{nwsIFindTry}.
+The difference is that the \code{nwsFindTry} method cannot iterate through the
 values of a variable; it always returns the same value until the
 variable is modified.
 The iterator function, however, maintains some state that allows
@@ -31,7 +31,7 @@ it to see subsequent values.
 Each time the iterator function is called, it returns the next
 value in the variable.
 Once all values in the variable have been returned, the iterator
-function will return defaultVal.
+function returns \code{defaultVal}.
 However, when new values are stored into the variable, the iterator
 function will return them, picking right up where it left off.
 }

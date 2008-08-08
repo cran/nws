@@ -3,10 +3,10 @@
 \alias{rankCount-methods}
 \alias{rankCount,sleigh-method}
 \alias{rankCount}
-\title{sleigh Class Method}
+\title{Return a Rank Count from a Sleigh}
 \description{
-Return rankCount in sleigh. If rankCount equals -1, then the worker group has closed, and no more workers
-may join the group. 
+Return the \code{rankCount} in sleigh. If \code{rankCount=-1}, then the 
+worker group has closed, and no more workers may join the group. 
 }
 
 \usage{

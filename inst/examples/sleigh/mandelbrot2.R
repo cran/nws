@@ -20,8 +20,7 @@ x <- seq(-2.0, 0.6, length.out=240)
 y <- seq(-1.3, 1.3, length.out=240)
 m <- 100
 
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 opts <- list(chunkSize=10, loadFactor=4)
 z <- eachElem(s, vmandelbrot, list(b0=y), list(av=x, lim=m), eo=opts)

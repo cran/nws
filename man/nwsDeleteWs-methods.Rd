@@ -3,7 +3,7 @@
 \alias{nwsDeleteWs}
 \alias{nwsDeleteWs-methods}
 \alias{nwsDeleteWs,nwsServer-method}
-\title{nwsServer Class Method}
+\title{Delete a netWorkSpace}
 \description{
 Delete a shared netWorkSpace from the netWorkSpaces server.
 }

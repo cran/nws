@@ -94,7 +94,7 @@ addWorker <- function(machine, wsName, userWsName, id, workerCount, options) {
   }
 
   argv = c(launchcmd, workerstart)
-  cmd = argv2str(argv)
+  cmd = argv2str(argv, options)
   if (options$verbose) cat("Executing command: ", cmd, "\n")
   system(cmd)
 }
@@ -149,29 +149,48 @@ countElement <- function(x, by) {
     length(x)
 }
 
-msc_quote <- function(arg) {
-  q <- '"'
-  nbs <- 0
-  v <- strsplit(arg, split='')[[1]]
-  for (c in v) {
-    if (c == '\\') {
-      q <- paste(q, c, sep='')
-      nbs <- nbs + 1
-    }
-    else if (c == '"') {
-      q <- paste(q, paste(rep('\\', nbs + 1), collapse=''), c, sep='')
-      nbs <- 0
-    }
-    else {
-      q <- paste(q, c, sep='')
-      nbs <- 0
-    }
+msc.quote <- function(arg) {
+  # argument needs quoting if it contains whitespace or a double-quote
+  if (length(grep('[[:space:]"]', arg)) == 0 || nchar(arg)[1] == 0) {
+    arg
   }
+  else {
+    q <- '"'
+    nbs <- 0
+    v <- strsplit(arg, split='')[[1]]
+    for (c in v) {
+      if (c == '\\') {
+        q <- paste(q, c, sep='')
+        nbs <- nbs + 1
+      }
+      else if (c == '"') {
+        q <- paste(q, paste(rep('\\', nbs + 1), collapse=''), c, sep='')
+        nbs <- 0
+      }
+      else {
+        q <- paste(q, c, sep='')
+        nbs <- 0
+      }
+    }
 
-  paste(q, paste(rep('\\', nbs), collapse=''), '"', sep='')
+    paste(q, paste(rep('\\', nbs), collapse=''), '"', sep='')
+  }
 }
 
-unix_quote <- function(arg) {
+simple.quote <- function(arg) {
+  if (length(grep('"', arg)) > 0) {
+    stop('arguments cannot contain double quotes with simple quoting')
+  }
+  else if (length(grep('[[:space:]]', arg)) == 0 || nchar(arg)[1] == 0) {
+    # argument without whitespace and double-quotes don't need quoting
+    arg
+  }
+  else {
+    paste('"', arg, '"', sep='')
+  }
+}
+
+unix.quote <- function(arg) {
   q <- "'"
   v <- strsplit(arg, split='')[[1]]
   for (c in v) {
@@ -184,9 +203,14 @@ unix_quote <- function(arg) {
   paste(q, "'", sep='')
 }
 
-argv2str <- function(argv) {
-  if (Sys.info()[['sysname']] == 'Windows')
-    paste(lapply(argv, msc_quote), collapse=' ')
-  else
-    paste(lapply(argv, unix_quote), collapse=' ')
+argv2str <- function(argv, options) {
+  if (Sys.info()[['sysname']] == 'Windows') {
+    if (options$simpleQuote)
+      paste(lapply(argv, simple.quote), collapse=' ')
+    else
+      paste(lapply(argv, msc.quote), collapse=' ')
+  }
+  else {
+    paste(lapply(argv, unix.quote), collapse=' ')
+  }
 }

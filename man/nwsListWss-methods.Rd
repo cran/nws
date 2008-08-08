@@ -3,7 +3,7 @@
 \alias{nwsListWss}
 \alias{nwsListWss-methods}
 \alias{nwsListWss,nwsServer-method}
-\title{nwsServer Class Method}
+\title{List All netWorkSpaces}
 \description{
 List all netWorkSpaces in the netWorkSpaces server.
 }
@@ -18,12 +18,14 @@ List all netWorkSpaces in the netWorkSpaces server.
 }
 
 \details{
-By default, showDataFrame is set to FALSE, which means
+By default, \code{showDataFrame} is set to \code{FALSE}, which means
 the return value is a text string containing a list of workspaces in the
-netWorkSpaces server. To see list output clearly, use:
-write(nwsListWss(.Object), stdout()).
-If showDataFrame is set to TRUE, then return value is a data frame
-with these fields: Owned, Name, Owner, Persistent, NumVariables, and Variables.
+netWorkSpaces server. To see list output clearly, use: \cr
+\code{write(nwsListWss(.Object), stdout())}
+
+If \code{showDataFrame} is set to \code{TRUE}, then the return value 
+is a data frame with these columns: \code{Owned}, \code{Name}, 
+\code{Owner}, \code{Persistent}, \code{NumVariables}, and \code{Variables}.
 }
 
 \examples{
@@ -36,7 +38,7 @@ write(nwsListWss(nwss), stdout())
 
 # example 2
 # retrieve all workspace names
-df <- nwsListWss(nwss), showDataFrame=TRUE)
+df <- nwsListWss(nwss, showDataFrame=TRUE)
 df$Name
 $"1"
 [1] "__default"

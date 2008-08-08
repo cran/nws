@@ -13,11 +13,11 @@ to this environment.  Those new values will be used when
 constructing all new sleigh objects.  You can also define
 new entries, which can be used from custom launch functions.
 
-Note that the defaultSleighOptions environment is used to
+Note that the \code{defaultSleighOptions} environment is used to
 check for illegal options to the sleigh initializer.
 Therefore, to allow new options to be passed to a custom
 launch function, you must first define a default value for
-that option in defaultSleighOptions.
+that option in \code{defaultSleighOptions}.
 }
 
 \examples{

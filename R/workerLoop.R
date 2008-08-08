@@ -87,10 +87,8 @@ workerLoop <- function(nws, displayName, rank, workerCount, verbose, userNws) {
   ## set RNG seed to a pseudo-unique value
   ## FIXME: Use sprng instead!
   setRNGSeed <- function() {
-    now <- as.numeric(Sys.time())
-    seedval <- as.integer(rank)
+    seedval <- as.integer(rank) + 1
     set.seed(seedval)
-    seedval
   }
 
   setRNGSeed()

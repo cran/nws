@@ -1,9 +1,9 @@
-\name{nwsMktempWs-methods}
+\name{nwsMktempWs}
 \docType{methods}
 \alias{nwsMktempWs}
 \alias{nwsMktempWs-methods}
 \alias{nwsMktempWs,nwsServer-method}
-\title{nwsServer class method}
+\title{Create a Temporary netWorkSpace}
 \description{
 Create a unique temporary netWorkSpace using the template string.
 }
@@ -18,14 +18,14 @@ Create a unique temporary netWorkSpace using the template string.
 }
 
 \details{
-nwsMktempWs(nwss, wsNameTemplate) returns the name of a temporary space
+\code{nwsMktempWs(nwss, wsNameTemplate)} returns the name of a temporary space
 created on the netWorkSpaces server.
-The template should contain a '\%d'-like construct which will be
+The template should contain a \code{\%d}-like construct which will be
 replaced by a serial counter maintained by the server to generate
 a unique new netWorkSpace name.
-The user must then invoke nwsOpenWs() or nwsUseWs()
+The user must then invoke \code{nwsOpenWs} or \code{nwsUseWs}
 with this name to create  an object to acceess this workspace. 
-WsNameTemplate defaults to '\_\_Rws\_\_\%010d'
+WsNameTemplate defaults to \code{__Rws__\%010d}.
 }
 
 \examples{

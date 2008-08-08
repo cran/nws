@@ -5,7 +5,8 @@
 \alias{eachElem,sleigh-method}
 \alias{eachElem}
 \usage{
-  \S4method{eachElem}{sleigh}(.Object, fun, elementArgs=list(), fixedArgs=list(), eo=NULL, DEBUG=FALSE)
+  \S4method{eachElem}{sleigh}(.Object, fun, elementArgs=list(), fixedArgs=list(), 
+      eo=NULL, DEBUG=FALSE)
 }
 \arguments{
   \item{.Object}{sleigh class object.}
@@ -13,11 +14,11 @@
     In the case of functions like \code{+}, \code{\%*\%}, etc.,
     the function name must be quoted.}
   \item{elementArgs}{list of vectors, lists, matrices, and data frames that
-    specify (some of) the arguments to be passed to \code{fun}.}
-  \item{fixedArgs}{list of additional arguments to be passed to \code{fun}.}
-  \item{eo}{list specifying special options.}
+    specify (some of) the arguments to be passed to \code{fun}. Each element should correspond to an argument of \code{fun}.}
+  \item{fixedArgs}{list of additional arguments to be passed to \code{fun}. Each element should correspond to an argument of \code{fun}.}
+  \item{eo}{list specifying environment options. See the section Environment Options below.}
   \item{DEBUG}{logical; should \code{browser} function be called upon entry to
-    \code{eachElem}?}
+    \code{eachElem}? The default is \code{FALSE}.}
 }
 \description{
   \code{eachElem} executes function \code{fun} multiple times in
@@ -27,14 +28,12 @@
   the function arguments can be specified.
 }
 \details{
-  \code{eachElem} forms argument sets from objects passed in via
-  \code{elementArgs} and \code{fixedArgs}.  Both \code{elementArgs} and
-  \code{fixedArgs} should be lists, with each element of these lists
-  corresponding to an argument of \code{fun}.  The elements of
-  \code{elementsArgs} are used to specify the arguments that are
+  The \code{eachElem} function forms argument sets from objects passed in via
+  \code{elementArgs} and \code{fixedArgs}.  
+   The elements of \code{elementsArgs} are used to specify the arguments that are
   changing, or varying, from task to task, while the elements of
   \code{fixedArgs} are used to specify the arguments that do not vary
-  form task to task.  The number of tasks that are executed by a call to
+  from task to task.  The number of tasks that are executed by a call to
   \code{eachElem} is basically equal to the length of the longest vector
   (or list, etc) in \code{elementArgs}.  If any elements of
   \code{elementArgs} are shorter, then their values are recycled, using
@@ -42,13 +41,13 @@
 
   The elements of \code{elementArgs} may be vectors, lists, matrices, or
   data frames.  The vectors and lists are always iterated over by
-  element, or "cell", but matrices and data frames can also be iterated
+  element, or \code{"cell"}, but matrices and data frames can also be iterated
   over by row or column.  This is controlled by the \code{by} option,
   specified via the \code{eo} argument.  See below for more information.
 
   For example:\cr
 
-    eachElem(s, '+', elementArgs=list(1:4), fixedArgs=list(100))\cr
+    \code{eachElem(s, '+', elementArgs=list(1:4), fixedArgs=list(100))}\cr
 
   This will submit four tasks, since the length of 1:4 is four.  The
   four tasks will be to add the arguments 1 and 100, 2 and 100, 3 and
@@ -57,7 +56,7 @@
 
   Another way to do the same thing is with:\cr
 
-    eachElem(s, '+', elementArgs=list(1:4, 100))\cr
+    \code{eachElem(s, '+', elementArgs=list(1:4, 100))}\cr
 
   Since the second element of \code{elementArgs} is length one, it's
   value is recycled four times, thus specifying the same set of tasks as
@@ -65,24 +64,22 @@
   easy to put fixed values before varying values, without the need for
   the \code{eo$argPermute} option, discussed later.  For example:\cr
 
-    eachElem(s, '-', elementArgs=list(100, 1:4))
+    \code{eachElem(s, '-', elementArgs=list(100, 1:4))}
 
   is similar to the R statement:
 
-    100 - 1:4
+    \code{100 - 1:4}
 
   Note that in simple examples like these, where the results are numeric
   values, the standard R \code{unlist} function can be very
   useful for converting the resulting list into a vector.
-
+}
+\section{Environment Options}{
   The \code{eo} argument is a list that can be used to specify various
-  options.  The current options are: \code{eo$elementFunc},
-  \code{eo$accumulator}, \code{eo$by}, \code{eo$chunkSize},
-  \code{eo$loadFactor}, \code{eo$blocking}, and \code{eo$argPermute}.
-
-  The \code{eo$elementFunc} option can be used to specify a callback
-  function that provides the varying arguments for \code{fun} in place
-  of \code{elementArgs} (ie. you can't specify both
+  options.  The following options are recognized: 
+  \describe{ 
+  \item{elementFunc}{The \code{eo$elementFunc} option can be used to specify a callback function that provides the varying arguments for \code{fun} in place
+  of \code{elementArgs} (that is, you can't specify both
   \code{eo$elementFunc} and \code{elementArgs}).  \code{eachElem} calls
   the \code{eo$elementFunc} function to get a list of arguments for one
   invocation of \code{fun}, and will keep calling it until
@@ -99,16 +96,16 @@
   useful when executing a large number of tasks, or when the arguments
   are coming from a database query, for example.  For that reason, the
   \code{eo$loadFactor} option should usually be used in conjunction with
-  \code{eo$elementFunc} (see description below).
+  \code{eo$elementFunc} (see description below).}
 
-  The \code{eo$accumulator} option can be used to specify a callback
+  \item{accumulator}{The \code{eo$accumulator} option can be used to specify a callback
   function that will receive the results of the task execution as soon
   as they are complete, rather than returning all of the task results as
   a list when \code{eachElem} completes.  In other words,
   \code{eachElem} will call the \code{eo$accumulator} function with task
   results as soon as it receives them from the sleigh workers, rather
   than saving them in memory until all the tasks are complete.  Note
-  that if the tasks are "chunked" (using the \code{eo$chunkSize} option
+  that if the tasks are \emph{chunked} (using the \code{eo$chunkSize} option
   described below), then the \code{eo$accumulator} function will receive
   multiple task results, which is why the task results are always passed
   to the \code{eo$accumulator} function in a list.
@@ -127,20 +124,25 @@
   process an unlimited number of tasks efficiently.  Note that when
   \code{eo$accumulator} is specified, \code{eachElem} returns NULL, not
   the list of results, since \code{eachElem} doesn't save any of the
-  results after passing them to the \code{eo$accumulator} function.
+  results after passing them to the \code{eo$accumulator} function.}
 
-  The \code{eo$by} option specifies the iteration scheme to use for matrix
+  \item{by}{The \code{eo$by} option specifies the iteration scheme to use for matrix
   and data frame elements in \code{elementArgs}.  The default value is
-  "row", but it can also be set to "column" or "cell".  Vectors and
-  lists in \code{elementArgs} are not effected by this option.
+  \code{"row"}, but it can also be set to \code{"column"} or \code{"cell"}.  Vectors and
+  lists in \code{elementArgs} are not affected by this option.}
 
-  The \code{eo$chunkSize} option is a tuning parameter that
+  \item{chunkSize}{The \code{eo$chunkSize} option is a tuning parameter that
   specifies the number of tasks that sleigh workers should allocate at a
   time.  The default value is 1, but if the tasks are small, performance
   can be improved by specifying a larger value, which decreases the
   overhead per task.
 
-  The \code{eo$loadFactor} option is a tuning parameter that specifies
+  If the \code{fun} function executes very quickly, you may not be able
+  to keep your workers busy, giving you poor performance.  In that case,
+  consider setting the \code{eo$chunkSize} option to a large enough
+  number to increase the effective task execution time.}
+
+  \item{loadFactor}{The \code{eo$loadFactor} option is a tuning parameter that specifies
   the maximum number of tasks per worker that are submitted to the
   sleigh at the same time.  If set, no more than \code{(loadFactor *
   workerCount)} tasks will be submitted at the same time.  This helps to
@@ -149,24 +151,27 @@
   tasks.  Note that this option is ignored if \code{blocking} is set to
   \code{TRUE}, since the two options are incompatible with each other.
 
-  The \code{eo$blocking} option is used to indicate whether to wait for the
+  If in doubt, set the \code{eo$loadFactor} option to 10.  That will
+  almost certainly avoid putting a strain on the NetWorkSpaces server, and
+  if that isn't enough to keep your workers busy, then you should 
+  really be using the \code{eo$chunkSize} option to give the workers
+  more to do.}
+
+  \item{blocking}{The \code{eo$blocking} option is used to indicate whether to wait for the
   results, or to return as soon as the tasks have been submitted.  If
   set to \code{FALSE}, \code{eachElem} will return a \code{sleighPending}
   object that is used to monitor the status of the tasks, and to
   eventually retrieve the results.  You must wait for the results to be
   complete before executing any further tasks on the sleigh, or an
-  exception will be raised.  The default value is \code{TRUE}.
+  exception will be raised.  The default value is \code{TRUE}.}
 
-  The \code{eo$argPermute} option is used to reorder the arguments passed
+  \item{argPermute}{The \code{eo$argPermute} option is used to reorder the arguments passed
   to \code{fun}.  It is generally only useful if the \code{fixedArgs}
   argument has been specified, and some of those arguments need to
   precede the arguments specified via \code{elementArgs}.  Note that by
   using recycling of elements in \code{elementArgs}, the use of
-  \code{fixedArgs} and \code{argPermute} can often be avoided entirely.
-
-  The \code{DEBUG} argument is used call the \code{browser} function upon
-  entering \code{eachElem}.  The default value is \code{FALSE}.
-}
+  \code{fixedArgs} and \code{argPermute} can often be avoided entirely.}
+}}
 \note{
   If \code{elementArgs} or \code{fixedArgs} isn't a list,
   \code{eachElem} will automatically wrap it in a list.  This is a
@@ -184,20 +189,9 @@
   that if the data frame has many rows, the performance may not be good
   due to the overhead of subsetting data frames in R.
 
-  If the \code{fun} function executes very quickly, you may not be able
-  to keep your workers busy, giving you poor performance.  In that case,
-  consider setting the \code{eo$chunkSize} option to a large enough
-  number to increase the effective task execution time.
-
   If you have a huge number of tasks, consider using the
   \code{eo$elementFunc}, \code{eo$accumulator}, and \code{eo$loadFactor}
   options.
-
-  If in doubt, set the \code{eo$loadFactor} option to 10.  That will
-  almost certainly avoid putting a big on the NetWorkSpaces server, and
-  if that isn't enough to keep your workers busy, then you should be
-  really be using the \code{eo$chunkSize} option to give the workers
-  more to do.
 
   If \code{eo$elementFunc} returns a value that isn't a list,
   \code{eachElem} will automatically wrap that value in a list.

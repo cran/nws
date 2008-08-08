@@ -17,18 +17,23 @@ which are required.  To download and install the server, go to the
 R NetWorkSpaces project on Source Forge at
 \url{http://sourceforge.net/projects/nws-r}.
 
-NetWorkSpaces Pro (nwsPro) is the commercial version of NetWorkSpaces
-which has additional fault tolerance features.  More information is
-available at \url{http://www.lindaspaces.com/products/NWS_overview.html}.
+A commercial version of NetWorkSpaces which has additional fault 
+tolerance features is available as part of REvolution Computing's 
+ParallelR product. More information is
+available at \url{http://www.revolution-computing.com/revolution/web/static/products}.
 }
 \details{
-Further information is available in the following
+Further information is available in the following help topics:
 \tabular{ll}{
 \code{sleigh} \tab Create a sleigh for parallel execution\cr
 \code{eachWorker} \tab Execute a function on each of the workers
 in the sleigh\cr
 \code{eachElem} \tab Execute a function for a set of arguments\cr
-\code{export} \tab Export variables to worker processes\cr
+\code{netWorkSpace} \tab Create a NetWorkSpace\cr
+\code{nwsStore} \tab Assign a value to a variable in a NetWorkSpace\cr
+\code{nwsFetch} \tab Consume a value from a variable in a NetWorkSpace\cr
+\code{nwsFind} \tab Retrieve but don't consume a value from a variable in
+a NetWorkSpace\cr
 }
 
 For a complete list of functions with individual help pages,

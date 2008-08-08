@@ -1,5 +1,5 @@
 \name{nwsVariable}
-\title{Create an Active Binding for a NetWorkSpace Variable}
+\title{Create an Active Binding for a netWorkSpace Variable}
 \docType{methods}
 \alias{nwsVariable-methods}
 \alias{nwsVariable,netWorkSpace-method}
@@ -30,9 +30,10 @@
   however.
 
   The \code{mode} of the variable controls what happens when a variable
-  is accessed.  If the \code{mode} is 'single', then all accesses use
-  the \code{nwsFind} operation.  If the \code{mode} is 'fifo', 'lifo',
-  or 'multi', then all accesses use the \code{nwsFetch} operation.  
+  is accessed.  If the \code{mode} is \code{'single'}, then all accesses use
+  the \code{nwsFind} operation.  If the \code{mode} is \code{'fifo'}, 
+  \code{'lifo'}, or \code{'multi'}, then all accesses use the 
+  \code{nwsFetch} operation.  
   Assigning a value to an \code{nwsVariable} always uses the
   \code{nwsStore} operation.
 }

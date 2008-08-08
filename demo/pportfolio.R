@@ -111,8 +111,7 @@ accum <- function(valueList) {
 }
 
 # do the work in parallel
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh(workerCount=workerCount)
 tmp <- eachWorker(s, function(g1) {stocks <<- g1; NULL}, stocks)
 opts <- list(accumulator=accum, chunkSize=chunkSize, loadFactor=loadFactor)

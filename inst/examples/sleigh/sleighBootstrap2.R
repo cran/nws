@@ -6,8 +6,7 @@ task <- function(y) {
   boot(nuke.data, nuke.fun, R=y, m=1, fit.pred=new.fit, x.pred=new.data)
 }
 
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 
 R <- 20000

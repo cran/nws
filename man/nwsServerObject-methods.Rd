@@ -3,9 +3,9 @@
 \alias{nwsServerObject}
 \alias{nwsServerObject-methods}
 \alias{nwsServerObject,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Return Server Object Associated with netWorkSpace}
 \description{
-Return the nwsServer object associated with a netWorkSpace.
+Return the \code{nwsServer} object associated with a netWorkSpace.
 }
 
 \usage{

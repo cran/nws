@@ -300,10 +300,10 @@ while (TRUE) {
       # read the image file into a variable
       size <- file.info(imagefile)$size
       # cat(imagefile, 'has', size, 'bytes\n')
-      image <- rawToChar(readBin(imagefile, 'raw', size))
+      image <- readBin(imagefile, 'raw', size)
 
       # send the image data to the web interface and remove the image file
-      # cat('sending reply', nchar(image), 'bytes long\n')
+      # cat('sending reply', length(image), 'bytes long\n')
       nwsStore(bws, replyVarName, '3')
       nwsStore(bws, replyVarName, 'content-type=image/png')
       nwsStore(bws, replyVarName, 'cache-control=no-cache')

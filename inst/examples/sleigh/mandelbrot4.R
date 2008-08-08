@@ -38,8 +38,7 @@ m <- 100
 
 if (dev.cur() == 1) get(getOption("device"))()
 
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 accum <- function(results, indices) {
   a <- do.call(cbind, results)

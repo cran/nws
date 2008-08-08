@@ -3,7 +3,7 @@
 \alias{nwsWsName}
 \alias{nwsWsName-methods}
 \alias{nwsWsName,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Return Name of a netWorkSpace}
 \description{
 Return name of a netWorkSpace.
 }

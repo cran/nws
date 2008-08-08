@@ -21,12 +21,12 @@
 nwsRFP = 3*2^24
 
 # a utility function to read exactly n bytes from the socket connection.
-nwsRecvN <- function(s, n) {
+nwsRecvN <- function(s, n, rawflag=FALSE) {
   if (n > 0) {
     b = readBin(s, what='raw', n=n)
     m = length(b)
     n = n - m
-    if (n <= 0) return(rawToChar(b))
+    if (n <= 0) return(if (rawflag) b else rawToChar(b))
     if (m == 0) stop("failed to read from nws socket")
 
     # we didn't get all of the data, so save the raw vector in a list
@@ -54,10 +54,10 @@ nwsRecvN <- function(s, n) {
     # truncate the list, concatenate the raw vectors,
     # and convert to a single character string
     length(r) = i
-    return(rawToChar(do.call(c, r)))
+    return(if (rawflag) do.call(c, r) else rawToChar(do.call(c, r)))
   }
   else {
-    return('')
+    return(if (rawflag) raw(0) else '')
   }
 }
 
@@ -354,7 +354,7 @@ setGeneric('nwsIFind', function(.Object, xName) standardGeneric('nwsIFind'))
 setGeneric('nwsIFindTry', function(.Object, xName, defaultVal=NULL) standardGeneric('nwsIFindTry'))
 setGeneric('nwsListVars', function(.Object, wsName='', showDataFrame=FALSE) standardGeneric('nwsListVars'))
 setGeneric('nwsStore', function(.Object, xName, xVal) standardGeneric('nwsStore'))
-setGeneric('nwsStoreFile', function(.Object, xName, fObj, n=-1) standardGeneric('nwsStoreFile'))
+setGeneric('nwsStoreFile', function(.Object, xName, fObj, n=0) standardGeneric('nwsStoreFile'))
 setGeneric('nwsWsName', function(.Object) standardGeneric('nwsWsName'))
 setGeneric('nwsVariable', function(.Object, xName, mode=c('fifo','lifo','multi','single'),
            env=parent.frame(), force=FALSE, quietly=FALSE) standardGeneric('nwsVariable'))
@@ -419,22 +419,31 @@ nwsRetrieve <- function(cprot, s, ws, xName, op, defaultVal=NULL) {
 
   desc = as.integer(nwsRecvN(s, 20))
   envId = desc %/% 16777216 #(2^24)
-  isString = desc %% 2
+  # if bit zero is set, then the object is not serialized
+  notSerialized = desc %% 2
 
   if (cprot) cookie <- nwsRecvN(s, 40)
 
   n = as.integer(nwsRecvN(s, 20))
-  sVal = nwsRecvN(s, n)
+  sVal = nwsRecvN(s, n, rawflag=TRUE)
 
   if (status != 0) stop('retrieval failed')
 
-  if (isString) {
-    sVal
+  if (notSerialized) {
+    # if bit zero and one of desc are set, it's binary data
+    if (desc %% 4 - 1)
+      # Return a raw vector
+      sVal
+    else
+      # Return a character string
+      rawToChar(sVal)
   }
-  else if (nchar(sVal) > 0) {
+  else if (length(sVal) > 0) {
+    # Return an object
     unserialize(sVal)
   }
   else {
+    # Return the defalt value
     defaultVal
   }
 }
@@ -477,8 +486,8 @@ nwsRetrieveFile <- function(cprot, s, ws, xName, op, fObj) {
     f <- file(fObj, 'wb')
     on.exit(close(f))
   } else {
-    if (!is(fObj, "file") || !isOpen(fObj, "r") || summary(fObj)$text != "binary")
-      stop('fobj must be a binary mode file object opened for reading')
+    if (!is(fObj, "file") || !isOpen(fObj, "w") || summary(fObj)$text != "binary")
+      stop('fobj must be a binary mode file object opened for writing')
     f <- fObj
   }
 
@@ -497,10 +506,10 @@ nwsRetrieveFile <- function(cprot, s, ws, xName, op, fObj) {
 
   blen <- 16 * 1024
   while (n > 0) {
-    d <- nwsRecvN(s, min(n, blen))
-    if (nchar(d) == 0) stop('NWS server connection dropped')
-    writeBin(charToRaw(d), f)
-    n <- n - nchar(d)
+    d <- nwsRecvN(s, min(n, blen), rawflag=TRUE)
+    if (length(d) == 0) stop('NWS server connection dropped')
+    writeBin(d, f)
+    n <- n - length(d)
   }
 
   if (status != 0) stop('retrieval failed')
@@ -515,9 +524,17 @@ setMethod('nwsFetchFile', 'netWorkSpace',
 
 setMethod('nwsFetchTryFile', 'netWorkSpace',
           function(.Object, xName, fObj) {
-            tryCatch(nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
-                                     .Object@wsName, xName, 'fetchTry', fObj),
-                     error=function(e) FALSE)
+            tryCatch({
+                nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
+                                .Object@wsName, xName, 'fetchTry', fObj)
+              }, error=function(e) {
+                if (e$message == 'retrieval failed') {
+                  FALSE
+                }
+                else {
+                  stop(e$message)
+                }
+              })
           })
 
 setMethod('nwsFindFile', 'netWorkSpace',
@@ -528,9 +545,17 @@ setMethod('nwsFindFile', 'netWorkSpace',
 
 setMethod('nwsFindTryFile', 'netWorkSpace',
           function(.Object, xName, fObj) {
-            tryCatch(nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
-                                     .Object@wsName, xName, 'findTry', fObj),
-                     error=function(e) FALSE)
+            tryCatch({
+                nwsRetrieveFile(.Object@cookieProtocol, .Object@server@nwsSocket,
+                                .Object@wsName, xName, 'findTry', fObj)
+              }, error=function(e) {
+                if (e$message == 'retrieval failed') {
+                  FALSE
+                }
+                else {
+                  stop(e$message)
+                }
+              })
           })
 
 setMethod('nwsIFetch', 'netWorkSpace',
@@ -616,7 +641,10 @@ nwsStoreInternal <- function(s, ws, xName, xVal) {
     stop('no value specified for xVal argument')
   }
 
-  if (!is.character(xVal) || (length(xVal) != 1)) {
+  if (is.raw(xVal)) {
+    desc = desc + 3
+  }
+  else if (!is.character(xVal) || (length(xVal) != 1)) {
     xVal = serialize(xVal, ascii=FALSE, connection=NULL)
     # serialize returns a raw vector as of R 2.4 
     if (is.character(xVal)) xVal = charToRaw(xVal)
@@ -655,7 +683,7 @@ setMethod('nwsStoreFile', 'netWorkSpace',
             s <- .Object@server@nwsSocket
             op <- 'store'
 
-            desc <- nwsRFP + 1  # R Fingerprint and raw data
+            desc <- nwsRFP + 3  # R Fingerprint and raw data
 
             if (missing(fObj)) {
               stop('no value specified for fObj argument')
@@ -666,8 +694,8 @@ setMethod('nwsStoreFile', 'netWorkSpace',
               f <- file(fObj, 'rb')
               on.exit(close(f))
             } else {
-              if (!is(fObj, "file") || !isOpen(fObj, "w") || summary(fObj)$text != "binary")
-                stop('fobj must be a binary mode file object opened for writing')
+              if (!is(fObj, "file") || !isOpen(fObj, "r") || summary(fObj)$text != "binary")
+                stop('fobj must be a binary mode file object opened for reading')
               f <- fObj
             }
       
@@ -794,19 +822,26 @@ nwsIRetrieve <- function(s, ws, xName, op, varId, valIndex) {
 
   desc = as.integer(nwsRecvN(s, 20))
   envId = desc %/% 16777216 #(2^24)
-  isString = desc %% 2
+  # if bit zero is set, then the object is not serialized
+  notSerialized = desc %% 2
 
   # cookie protocol is assumed at this point
   varId = nwsRecvN(s, 20)
   valIndex = as.integer(nwsRecvN(s, 20))
 
   n = as.integer(nwsRecvN(s, 20))
-  sVal = nwsRecvN(s, n)
+  sVal = nwsRecvN(s, n, rawflag=TRUE)
 
-  if (isString) {
-    list(status=status, sVal=sVal, varId=varId, valIndex=valIndex)
+  if (notSerialized) {
+    # if bit zero and one of desc are set, it's binary data
+    if (desc %% 4 - 1)
+      # Return a raw vector
+      list(status=status, sVal=sVal, varId=varId, valIndex=valIndex)
+    else
+      # Return a character string
+      list(status=status, sVal=rawToChar(sVal), varId=varId, valIndex=valIndex)
   }
-  else if (nchar(sVal) > 0) {
+  else if (length(sVal) > 0) {
     list(status=status, sVal=unserialize(sVal), varId=varId, valIndex=valIndex)
   }
   else {

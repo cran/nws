@@ -1,5 +1,4 @@
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 
 ring <- function(numWorkers, numTasks) {
   mine <- sprintf("worker_%d", SleighRank)

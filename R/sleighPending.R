@@ -89,8 +89,12 @@ setMethod('waitSleigh', 'sleighPending', function(.Object) {
         # ignore everything but 'VALUE' messages
         if (is.list(r) && r$type == 'VALUE') break
       }
+
+      # order results by rank for eachWorker, by tag for eachElem
+      ind = if (.Object@barrierName != '') r$rank + 1 else r$tag
+
       if (is.null(accum)) {
-        val[r$tag:(r$tag + length(r$value) - 1)] = r$value
+        val[ind:(ind + length(r$value) - 1)] = r$value
       }
       else {
         if (accumargs == 0)
@@ -98,7 +102,7 @@ setMethod('waitSleigh', 'sleighPending', function(.Object) {
         else if (accumargs == 1)
           try(accum(r$value))
         else
-          try(accum(r$value, r$tag:(r$tag + length(r$value) - 1)))
+          try(accum(r$value, ind:(ind + length(r$value) - 1)))
       }
     }
   }

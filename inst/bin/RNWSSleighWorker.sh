@@ -25,7 +25,7 @@ cd ${RSleighWorkingDir:-'/tmp'}
 LogDir=${RSleighLogDir:-'/tmp'}
 if [ -n "${RSleighWorkerOut}" ]; then
     RSleighVerbose='TRUE'
-    RSleighLogFile="${LogDir}/`basename ${RSleighWorkerOut}`"
+    RSleighLogFile=${LogDir}/`basename "${RSleighWorkerOut}"`
 else
     RSleighVerbose='FALSE'
     RSleighLogFile='/dev/null'
@@ -65,7 +65,8 @@ RCEHost=`hostname`
 export RCEPid RCEHost
 
 # sentinel
-$RProg --vanilla --slave <<'EOF' > ${LogDir}/RSleighSentinelLog_${UID}_${RSleighID} 2>&1
+USERID=`id -u`
+$RProg --vanilla --slave <<'EOF' > ${LogDir}/RSleighSentinelLog_${USERID}_${RSleighID} 2>&1
 
 nwsPkg <- ''
 local({

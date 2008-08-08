@@ -25,7 +25,8 @@ barrierNames <- list('barrier0', 'barrier1')
 isClosure <- function(fun) {
   if (is.function(fun)) {
     e <- environment(fun)
-    !is.null(e) && identical(getPackageName(e), "") &&
+    !is.null(e) && exists("environmentName", mode="function") &&
+        identical(environmentName(e), "") &&
         length(ls(e, all.names=FALSE)) > 0
   } else {
     FALSE
@@ -81,8 +82,8 @@ computeDefaultSleighOptions <- function(pkgpath) {
       nwsPortRemote = nwsPort,
       outfile = NULL,
       launch = 'local',
-      workerCount = 3,
-      nodeList = c('localhost','localhost','localhost'),
+      workerCount = NULL,
+      nodeList = NULL,
       scriptExec = scriptExec,
       wrapperDir = scriptDir, 
       scriptDir = scriptDir, 
@@ -91,6 +92,8 @@ computeDefaultSleighOptions <- function(pkgpath) {
       workingDir = getwd(),
       logDir = NULL,
       user = NULL,
+      passwd = NULL,
+      simpleQuote = FALSE,
       wsNameTemplate = 'sleigh_ride_%04d',
       userWsNameTemplate = 'sleigh_user_%04d',
       verbose = FALSE,
@@ -177,13 +180,22 @@ function(.Object, ...) {
   nwsDeclare(.Object@nws, 'exported', 'fifo')
 
   if (is.function(opts$launch)) {
-    if (length(opts$nodeList) < 1) {
+    if (is.null(opts$workerCount)) {
+      .Object@nodeList = if (is.null(opts$nodeList))
+                           rep('localhost', 3) else opts$nodeList
+    }
+    else {
+      .Object@nodeList = if (is.null(opts$nodeList))
+                           rep('localhost', opts$workerCount)
+                         else
+                           rep(opts$nodeList, length=opts$workerCount)
+    }
+    .Object@state$workerCount = length(.Object@nodeList)
+
+    if (.Object@state$workerCount < 1) {
       close(.Object@nwss)
       stop('must have at least one worker in a sleigh')
     }
-
-    .Object@nodeList = opts$nodeList
-    .Object@state$workerCount = length(opts$nodeList)
 
     for (i in 1:.Object@state$workerCount) {
       if (opts$verbose)
@@ -191,43 +203,62 @@ function(.Object, ...) {
 
       # since we are calling it in the constructor, maybe this cannot be
       # a method?
-      addWorker(.Object@nodeList[i], .Object@nwsName, .Object@userNwsName, i, .Object@state$workerCount, opts)
+      addWorker(.Object@nodeList[i], .Object@nwsName, .Object@userNwsName,
+                i, .Object@state$workerCount, opts)
     }
   }
   else if (opts$launch == 'service') {
     # remote launch using the "R Sleigh Service"
-    if (length(opts$nodeList) < 1) {
+    service = tryCatch({
+        nwsUseWs(.Object@nwss, 'RSleighService', create=FALSE)
+      }, error=function(e) {
+        close(.Object@nwss)
+        stop('no sleigh services are running')
+      })
+
+    wsvars = nwsListVars(service, showDataFrame=TRUE)
+    regworkers = unlist(wsvars$Variable, use.names=FALSE)
+    user = if (is.null(opts$user)) Sys.info()[['login']] else opts$user
+
+    # Note: we are only allowing execution on non-administrator sleigh services
+    myworkers = regworkers[grep(paste('^', user, '@.', sep=''), regworkers)]
+
+    if (!is.null(opts$nodeList)) {
+      warning('ignoring user specified nodeList')
+    }
+
+    if (length(myworkers) < 1 || (!is.null(opts$workerCount) && opts$workerCount < 1)) {
       close(.Object@nwss)
       stop('must have at least one worker in a sleigh')
     }
 
-    .Object@nodeList = opts$nodeList
-    .Object@state$workerCount = length(opts$nodeList)
-    service = nwsUseWs(.Object@nwss, 'RSleighService', create=FALSE)
+    .Object@nodeList = if (!is.null(opts$workerCount))
+                         rep(myworkers, opts$workerCount) else myworkers
+    .Object@state$workerCount = length(.Object@nodeList)
 
     b = function(x) if (is.null(x)) '' else x
     for (i in 1:.Object@state$workerCount) {
       if (opts$verbose)
         opts$outfile = sprintf('%s_%04d.txt', .Object@nwsName, i)
       # XXX is '@' the best delimiter?
-      # XXX this should include userNwsName
-      request = sprintf('@%s@%d@%d@%s@%s@%s@%s',
+      request = sprintf('@%s@%s@%d@%d@%s@%s@%s@%s',
                         .Object@nwsName,
+                        .Object@userNwsName,
                         .Object@state$workerCount,
                         i,
                         b(opts$workingDir),
                         b(opts$outfile),
                         b(opts$logDir),
-                        b(opts$user))   # XXX handle NULL
+                        user)
       if (opts$verbose)
         cat('command:', request, '\n')
 
-      # XXX error check to make sure the worker is listed in workspace?
-      # XXX or issue a warning message?
       nwsStore(service, .Object@nodeList[i], request)
     }
   }
   else if (opts$launch == 'local') {
+    # set workerCount if nobody else has
+    if (is.null(opts$workerCount)) opts$workerCount <- 3
     if (opts$workerCount < 1) {
       close(.Object@nwss)
       stop('must have at least one worker in a sleigh')
@@ -453,7 +484,7 @@ function(.Object, fun, ..., eo=NULL, DEBUG=FALSE) {
       if (is.list(r) && r$type == 'VALUE') break
     }
     if (is.null(accumulator)) {
-      val[r$tag] = r$value
+      val[r$rank + 1] = r$value
     }
     else {
       if (accumargs == 0)
@@ -461,7 +492,7 @@ function(.Object, fun, ..., eo=NULL, DEBUG=FALSE) {
       else if (accumargs == 1)
         accumulator(r$value)
       else
-        accumulator(r$value, r$tag)
+        accumulator(r$value, r$rank + 1)
     }
   }
 

@@ -1,5 +1,4 @@
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 
 kmeansInit <-
 function()

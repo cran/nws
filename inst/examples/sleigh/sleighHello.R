@@ -2,8 +2,7 @@
 # that return a friendly greeting
 
 # initialize
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s = sleigh()
 ntasks = 10
 

@@ -46,7 +46,7 @@ downloading it from sourceforge or one of the CRAN mirror sites.
 In that case, you can either install nws as root or as a normal user.
 If installing as root, execute the command:
 
-    # R CMD INSTALL nws_1.6.x.tar.gz
+    # R CMD INSTALL nws_1.7.x.y.tar.gz
 
 Now every user on that machine will be able to load the nws package
 without any further configuration.
@@ -62,7 +62,7 @@ For example, say you want to install nws into a directory named
 "R-packages" under your home directory.  First, create the directory
 (if it doesn't exist), and then execute the command:
 
-    % R CMD INSTALL -l $HOME/R-packages nws_1.6.x.tar.gz
+    % R CMD INSTALL -l $HOME/R-packages nws_1.7.x.y.tar.gz
 
 This installs the nws package into the library $HOME/R-packages.
 

@@ -3,7 +3,7 @@
 \alias{nwsListVars}
 \alias{nwsListVars-methods}
 \alias{nwsListVars,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{List Variables in a netWorkSpace}
 \description{
 List variables in a netWorkSpace.
 }
@@ -13,23 +13,28 @@ List variables in a netWorkSpace.
 }
 
 \arguments{
-  \item{.Object}{a netWorkSpace class object}
-  \item{wsName}{name of the netWorkSpace}
-  \item{showDataFrame}{show result in data frame or string}
+  \item{.Object}{a netWorkSpace class object.}
+  \item{wsName}{character string specifying the name of the netWorkSpace.}
+  \item{showDataFrame}{logical flag specifying whether to show result in 
+data frame or string.}
 }
 
 \details{
-Return listing of variables in the netWorkSpace with the name passed by wsName argument.
-If wsName is empty, then return variables in the netWorkSpace
-represented by .Object.
+Return listing of variables in the netWorkSpace with the name passed by 
+\code{wsName} argument.
+If \code{wsName} is empty, then return variables in the netWorkSpace
+represented by \code{.Object}.
 
-The return values from nwsListVars can be represented in a string or a data frame.
-If showDataFrame is set to FALSE (default value), then
+The return values from \code{nwsListVars} can be represented in a 
+string or a data frame.
+If \code{showDataFrame} is set to \code{FALSE} (the default), then
 the listing is returned in a string. To see list output clearly,
-use: write(nwsListVars(.Object), stdout()).
-If showDataFrame is set to TRUE, then the listing is returned in a
-data frame with these fields: Variables, NumValues, NumFetchers,
-NumFinders, and Mode.
+use:\cr 
+\code{write(nwsListVars(.Object), stdout())}\cr
+
+If \code{showDataFrame} is set to \code{TRUE}, then the listing is returned in a
+data frame with these fields: \code{Variables}, \code{NumValues}, \code{NumFetchers},
+\code{NumFinders}, and \code{Mode}.
 }
 
 \examples{

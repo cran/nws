@@ -22,8 +22,7 @@ m <- 100
 
 if (dev.cur() == 1) get(getOption("device"))()
 
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 z <- matrix(m, length(x), length(y))
 accum <- function(results, indices) {

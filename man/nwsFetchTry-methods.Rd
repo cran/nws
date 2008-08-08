@@ -3,9 +3,9 @@
 \alias{nwsFetchTry}
 \alias{nwsFetchTry-methods}
 \alias{nwsFetchTry,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Fetch a Value from a NetWorkSpace (Non-Blocking Version)}
 \description{
-Attempt to fetch value associates with a variable from the shared netWorkSpace; 
+Attempt to fetch a value associated with a variable from the shared netWorkSpace; 
 a non-blocking version of \code{\link{nwsFetch}}.
 }
 
@@ -20,15 +20,15 @@ a non-blocking version of \code{\link{nwsFetch}}.
 }
 
 \details{
-Look in the shared netWorkSpace for a value bound to xName.  If found,
-remove a value associated with xName from the shared netWorkSpace.
-This operation is atomic. If there are multiple NetWorkSpaces clients
-nwsFetch or nwsFetchTry a given xName, any given value from the set of values associated with
-xName will be returned to just one client session. 
+Look in the shared netWorkSpace for a value bound to \code{xName}.  If found,
+remove a value associated with \code{xName} from the shared netWorkSpace.
+This operation is atomic. If there are multiple 
+nwsFetch or nwsFetchTry requests for a given \code{xName}, any given value from 
+the set of values associated with \code{xName} will be returned to just one requester. 
 
 If variable is not found, return immediately rather than block on the 
-operation (as in the case of \code{\link{nwsFetch}}). If variable is not found, the value of argument 
-defaultVal is returned. By default, defaultVal is NULL.
+operation (as in the case of \code{\link{nwsFetch}}). If variable is not found, 
+the value of argument \code{defaultVal} is returned. By default, \code{defaultVal} is \code{NULL}.
 }
 \seealso{ \code{\link{nwsDeclare}}, \code{\link{nwsFetch}} }
 
@@ -38,7 +38,8 @@ ws <- netWorkSpace('nws example')
 # If variable 'x' is not found in the shared netWorkSpace,
 # return default value, NULL.
 nwsFetchTry(ws, 'x')
-# If variable 'x' is not found in the shared netWorkSpace, return 10.
+# If variable 'x' is not found in the shared netWorkSpace, 
+# return 10.
 nwsFetchTry(ws, 'x', 10)
 }
 }

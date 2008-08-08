@@ -2,8 +2,7 @@
 
 source('nuclearBootstrapInit.R')
 
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 
 R <- 20000

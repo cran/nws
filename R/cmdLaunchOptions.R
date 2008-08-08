@@ -94,6 +94,24 @@ ccscmd <- function(host, options) {
   c("job", "submit", "/exclusive:false")
 }
 
+rwincmd <- function(host, options) {
+  # Note: Execution of cscript (done locally) must use simple quoting.
+  # However, the remote command (the one executed via rwin.vbs) must
+  # be done with MSC quoting, since the remote command is presumed to
+  # be the Python interpretter.  Therefore, we set options$simpleQuote
+  # to true, but we don't use the rwin.vbs "-s" option.
+  options$simpleQuote <- TRUE
+
+  wrapper <- file.path(options$wrapperDir, 'rwin.vbs')
+  if (is.null(options$passwd)) {
+    c('cscript', '//nologo', wrapper, host, '--')
+  }
+  else {
+    user <- if (is.null(options$user)) Sys.info()[['login']] else options$user
+    c('cscript', '//nologo', wrapper, host, '-l', user, '-p', options$passwd, '--')
+  }
+}
+
 envcmd <- function(host, envVars, options) {
   c('env', envVars, file.path(options$scriptDir, options$scriptName))
 }

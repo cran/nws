@@ -10,8 +10,7 @@ pboot <- function(s, R=20000) {
   eachWorker(s, task, chunkSize)
 }
 
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 
 results <- pboot(s)

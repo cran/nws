@@ -3,7 +3,7 @@
 \alias{nwsFindFile}
 \alias{nwsFindFile-methods}
 \alias{nwsFindFile,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Find a Stored Value and Write It to a File}
 \description{
 Find a value of a workspace variable and write it to a file.
 }
@@ -13,16 +13,20 @@ Find a value of a workspace variable and write it to a file.
 }
 
 \arguments{
-\item{.Object}{a netWorkSpace object}
-\item{xName}{name of the variable to find}
-\item{fObj}{File to write data to}
+\item{.Object}{a netWorkSpace object.}
+\item{xName}{character string specifying the name of the variable to find.}
+\item{fObj}{\code{file} object or character string specifying the file to write data to.}
 }
 
 \details{
-The nwsFindFile method blocks until a value in the variable specified by
-'xName' is found.  Once found, it writes the value to the file object,
-but the value is not removed from the variable (as in the case of
-\code{\link{nwsFetchFile}}). 
+The \code{nwsFindFile} method looks in the shared netWorkSpace \code{.Object}
+for a value bound to \code{xName}; if it finds such a value, \code{nwsFind}
+writes it to the specified file but does not remove it from the variable. 
+If no value is found, \code{nwsFindFile}
+blocks until a value for \code{xName} becomes available.
+If there is more than one value associated with \code{xName}, the
+particular value returned depends on \code{xName}'s behavior. See
+\code{\link{nwsDeclare}} for details.
 }
 
 \seealso{ \code{\link{nwsFetchFile}}, \code{\link{nwsFind}}}

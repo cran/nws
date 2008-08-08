@@ -2,16 +2,16 @@
 \alias{envcmd}
 \title{Sleigh Auxiliary Function}
 \description{
-This function is set through optional argument 'scriptExec' in the sleigh
+This function is set through optional argument \code{scriptExec} in the sleigh
 constructor. 
 }
 
 \details{
 This function indicates that configuration variables 
-such as RSleighName and RSleighNwsName are exported to the environment
-using env command. 
+such as \code{RSleighName} and \code{RSleighNwsName} are exported to 
+the environment using the \code{env} command. 
 
-envcmd is the default choice to execute worker scripts on UNIX.
+\code{envcmd} is the default choice to execute worker scripts on UNIX.
 }
 
 \examples{

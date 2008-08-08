@@ -18,8 +18,7 @@ if (FALSE) {
 
 # Parallel version
 if (TRUE) {
-  if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-    library(nws)
+  library(nws)
   s <- sleigh()
   prob <- unlist(eachElem(s, pbday, x))
 }

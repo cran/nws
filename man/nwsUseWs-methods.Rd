@@ -3,10 +3,10 @@
 \alias{nwsUseWs}
 \alias{nwsUseWs-methods}
 \alias{nwsUseWs,nwsServer-method}
-\title{nwsServer Class Method}
+\title{Connect to a netWorkSpace}
 \description{
-Connect to a netWorkSpace but does not claim ownership. 
-If the netWorkSpace does not exist, then it will be created, 
+Connects to a netWorkSpace but does not claim ownership. 
+If the netWorkSpace does not exist, it will be created, 
 but no ownership will be claimed.
 }
 

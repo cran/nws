@@ -20,8 +20,7 @@ xlist <- chunker(d$x)
 ylist <- chunker(d$y)
 
 f <- function(x, y) { r <- sqrt(x^2+y^2); 10 * sin(r)/r }
-if (! suppressWarnings(require(nwsPro, quietly=TRUE)))
-  library(nws)
+library(nws)
 s <- sleigh()
 z <- unlist(eachElem(s, f, elementArgs=list(x=xlist, y=ylist)))
 dim(z) <- c(length(x), length(x))

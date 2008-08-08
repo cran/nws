@@ -3,9 +3,9 @@
 \alias{nwsFetch}
 \alias{nwsFetch-methods}
 \alias{nwsFetch,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Fetch a Stored Value}
 \description{
-Fetch value associates with a variable from the shared netWorkSpace, .Object.
+Fetch value associated with a variable from the shared netWorkSpace.
 }
 
 \usage{
@@ -19,13 +19,14 @@ Fetch value associates with a variable from the shared netWorkSpace, .Object.
 }
 
 \details{
-Fetch method blocks until a value for xName is found in the shared netWorkSpace, .Object.
-Once found, remove a value associated with xName from the shared netWorkSpace.
-This operation is atomic. If there are multiple NetWorkSpaces clients
-nwsFetch or nwsFetchTry a given xName, any given value from the set of values associated with
-xName will be returned to just one client session. 
-If there is more than one value associated with xName, the particular
-value removed depends on xName's behavior. See \code{\link{nwsDeclare}} for details.
+The \code{nwsFetch} method looks in the shared netWorkSpace \code{.Object} 
+for a value bound to \code{xName}; if it finds such a value, \code{nwsFetch} 
+returns it and removes it from the variable. If no value is found, \code{nwsFetch} blocks until a value for \code{xName} becomes available.
+This operation is atomic. If there are multiple \code{nwsFetch} or 
+\code{nwsFetchTry} requests for a given \code{xName}, any given value from 
+the set of values associated with \code{xName} will be returned to just one requester. 
+If there is more than one value associated with \code{xName}, the particular
+value removed depends on \code{xName}'s behavior. See \code{\link{nwsDeclare}} for details.
 }
 \seealso{ \code{\link{nwsDeclare}}, \code{\link{nwsFetchTry}} }
 

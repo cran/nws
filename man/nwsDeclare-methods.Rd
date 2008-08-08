@@ -3,7 +3,7 @@
 \alias{nwsDeclare}
 \alias{nwsDeclare-methods}
 \alias{nwsDeclare,netWorkSpace-method}
-\title{netWorkSpace Class Method}
+\title{Declare a netWorkSpace Variable}
 \description{
 Declare a variable with particular mode in a shared netWorkSpace.
 }
@@ -13,19 +13,20 @@ Declare a variable with particular mode in a shared netWorkSpace.
 }
 
 \arguments{
-  \item{.Object}{a netWorkSpace class object}
-  \item{xName}{name of variable to be declared}
-  \item{mode}{mode of the variable, see details}
+  \item{.Object}{a netWorkSpace class object.}
+  \item{xName}{character string giving the name of variable to be declared.}
+  \item{mode}{character string specifying the mode of the variable, see Details.}
 }
 
 \details{
-If xName has not already been declared in the netWorkSpace, the behavior
-of xName will be determined by mode. Mode can be 'fifo',
-'lifo', 'multi', or 'single'. In the first three cases,
-multiple values can be associated with xName. When a value is
-retrieved for xName, the oldest value stored will be used in
-'fifo' mode, the youngest in 'lifo' mode, and a
-nondeterministic choice will be made in 'multi' mode. In
+If \code{xName} has not already been declared in the netWorkSpace, the behavior
+of \code{xName} will be determined by \code{mode}. Possible values are
+\code{'fifo'} (the default), \code{'lifo'}, \code{'multi'}, or 
+\code{'single'}. In the first three cases,
+multiple values can be associated with \code{xName}. When a value is
+retrieved for \code{xName}, the oldest value stored will be used in
+\code{'fifo'} mode, the youngest in \code{'lifo'} mode, and a
+nondeterministic choice will be made in \code{'multi'} mode. In
 'single' mode, only the most recent value is retained.
 }
 
@@ -35,8 +36,7 @@ ws <- netWorkSpace('nws example')
 nwsDeclare(ws, 'pi', 'single')
 nwsStore(ws, 'pi', 2.171828182)
 nwsStore(ws, 'pi', 3.141592654)
-
-# nwsListVars(ws) will show that only the most recent value of pi is retained
+nwsListVars(ws)  # shows that only the most recent value of pi is retained
 }
 }
 

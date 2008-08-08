@@ -2,9 +2,9 @@
 \docType{methods}
 \alias{stopSleigh}
 \alias{stopSleigh,sleigh-method}
-\title{sleigh Class Method}
+\title{Stop a Sleigh}
 \description{
-Shutdown sleigh workers and delete sleigh workspace.
+Shut down sleigh workers and delete sleigh workspace.
 }
 
 \usage{

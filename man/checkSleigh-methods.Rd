@@ -3,9 +3,9 @@
 \alias{checkSleigh}
 \alias{checkSleigh-methods}
 \alias{checkSleigh,sleighPending-method}
-\title{sleighPending Class Method}
+\title{Number of Results Pending From Sleigh}
 \description{
-Return the number of results yet to be generated for the pending sleigh job, .Object. 
+Return the number of results yet to be generated for the pending sleigh job. 
 }
 
 \usage{
@@ -13,12 +13,13 @@ Return the number of results yet to be generated for the pending sleigh job, .Ob
 }
 
 \arguments{
-\item{.Object}{a sleighPending class object}
+\item{.Object}{a \code{sleighPending} class object}
 }
 
 \details{
-The sleighPending class object, .Object, is usually obtained through non-blocking
-eachElem or non-blocking eachWorker. If the pending job is finished, i.e.
+The \code{sleighPending} class object, \code{.Object}, is usually 
+obtained through non-blocking \code{eachElem} or non-blocking 
+\code{eachWorker}. If the pending job is finished, that is, 
 all results are generated, then 0 is returned. 
 }
 \seealso{ \code{\link{eachWorker}}, \code{\link{eachElem}} }
