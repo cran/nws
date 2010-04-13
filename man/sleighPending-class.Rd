@@ -22,6 +22,8 @@ or \cr
   \describe{
     \item{\code{nws}:}{Object of class \code{"netWorkSpace"}.} 
     \item{\code{numTasks}:}{The number of pending tasks in sleigh.}
+    \item{\code{numSubmitted}:}{The number of tasks submitted.}
+    \item{\code{accumulator}:}{Function used as accumulator.}
     \item{\code{barrierName}:}{Character string giving the barrier name.}
     \item{\code{sleighState}:}{Object of class \code{"environment"} representing the sleigh state.}
     \item{\code{state}:}{Object of class \code{"environment"} representing the \code{sleighPending} state.}

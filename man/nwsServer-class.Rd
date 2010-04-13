@@ -17,6 +17,7 @@ or\cr
 }
 \section{Slots}{
   \describe{
+    \item{\code{cookieProtocol}:}{Currently not used.}
     \item{\code{nwsSocket}:}{Object of class \code{"ANY"} representation of the socket connection to the server.}
     \item{\code{port}:}{Object of class \code{"numeric"} representation of the server port number.}
     \item{\code{serverHost}:}{Object of class \code{"character"} representation of the server host name.}

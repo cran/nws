@@ -24,6 +24,7 @@ or \cr
 
 \section{Slots}{
   \describe{
+    \item{\code{cookieProtocol}}{Currently not used.}
     \item{\code{server}}{Object of class \code{"nwsServer"} representation of the server that this netWorkSpace connects to.}
     \item{\code{wsName}}{Object of class \code{"character"} representation of this netWorkSpace's name.}
   }
